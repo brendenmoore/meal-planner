@@ -15,40 +15,53 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-model Post {
-  id        Int      @id @default(autoincrement())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  createdBy   User   @relation(fields: [createdById], references: [id])
-  createdById String
-
-  @@index([name])
+model Recipe {
+  id            Int             @id @default(autoincrement())
+  userId        String
+  name          String
+  description   String
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  user          User            @relation(fields: [userId], references: [id])
+  CalendarEntry CalendarEntry[]
+  TemplateEntry TemplateEntry[]
 }
 
-model MealTemplate {
-  id        String      @id @default(cuid())
-  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String
-  name      String
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  entries   MealEntry[]
+model CalendarEntry {
+  id       Int      @id @default(autoincrement())
+  userId   String
+  recipeId Int
+  date     DateTime @db.Date
+  order    Int
+  user     User     @relation(fields: [userId], references: [id])
+  recipe   Recipe   @relation(fields: [recipeId], references: [id])
+
+  @@index([userId, date])
 }
 
-model MealEntry {
-  id          String       @id @default(cuid())
-  template    MealTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
-  templateId  String
-  position    Int
-  mealName    String
-  description String?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+model Template {
+  id                Int             @id @default(autoincrement())
+  userId            String
+  name              String
+  lastAppliedOffset Int             @default(-1)
+  lastAppliedDate   DateTime?       @db.Date
+  user              User            @relation(fields: [userId], references: [id])
+  entries           TemplateEntry[]
+  defaultForUsers   User[]          @relation("DefaultTemplate")
+}
 
-  @@unique([templateId, position])
-  @@index([templateId, position])
+model TemplateEntry {
+  id         Int      @id @default(autoincrement())
+  userId     String
+  templateId Int
+  recipeId   Int
+  dayOffset  Int
+  order      Int
+  template   Template @relation(fields: [templateId], references: [id])
+  recipe     Recipe   @relation(fields: [recipeId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@index([templateId, dayOffset])
 }
 
 // Necessary for Next auth
@@ -80,15 +93,19 @@ model Session {
 }
 
 model User {
-  id            String         @id @default(cuid())
-  name          String?
-  email         String?        @unique
-  emailVerified DateTime?
-  image         String?
-  accounts      Account[]
-  sessions      Session[]
-  posts         Post[]
-  MealTemplate  MealTemplate[]
+  id                String          @id @default(cuid())
+  name              String?
+  email             String?         @unique
+  emailVerified     DateTime?
+  image             String?
+  accounts          Account[]
+  sessions          Session[]
+  recipes           Recipe[]
+  calendarEntries   CalendarEntry[]
+  templates         Template[]
+  defaultTemplate   Template?       @relation("DefaultTemplate", fields: [defaultTemplateId], references: [id])
+  defaultTemplateId Int?
+  TemplateEntry     TemplateEntry[]
 }
 
 model VerificationToken {
