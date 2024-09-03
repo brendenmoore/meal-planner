@@ -1,6 +1,7 @@
 import { signIn, signOut, useSession } from "next-auth/react";
 import Head from "next/head";
 import Link from "next/link";
+import { CustomRecipeCalendar } from "~/components/custom-recipe-calendar";
 import { useCreateRecipe, useDeleteRecipe, useGetAllRecipes, useUpdateRecipe } from "~/queryHooks/recipeHooks";
 
 import { api } from "~/utils/api";
@@ -18,12 +19,12 @@ export default function Home() {
         <meta name="description" content="Plan your meals in advance" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]">
+      <main className="flex min-h-screen flex-col items-center justify-center">
         <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
-          <h1 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
+          <h1 className="text-5xl font-extrabold tracking-tight sm:text-[5rem]">
             Meal Planner
           </h1>
-          <div className="text-white">
+          <div>
             <div>
               <h2 className="text-2xl font-bold mb-4">Recipe CRUD Operations</h2>
               
@@ -121,6 +122,9 @@ export default function Home() {
               </div>
             </div>
           </div>
+        </div>
+        <div>
+          <CustomRecipeCalendar />
         </div>
       </main>
     </>

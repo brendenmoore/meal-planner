@@ -6,12 +6,25 @@ export const useGetCalendarEntriesByMonth = (month: number, year: number) => {
 
 export const useCreateCalendarEntry = () => {
   const utils = api.useUtils();
-  return api.calendarEntry.create.useMutation({
+  return api.calendarEntry.createWithExistingRecipe.useMutation({
     onSettled: (variables) => {
       utils.calendarEntry.getByMonth.invalidate({
         month: variables?.date.getMonth(),
         year: variables?.date.getFullYear(),
       });
+    },
+  });
+};
+
+export const useCreateCalendarEntryWithNewRecipe = () => {
+  const utils = api.useUtils();
+  return api.calendarEntry.createEntryWithNewRecipe.useMutation({
+    onSettled: (variables) => {
+      utils.calendarEntry.getByMonth.invalidate({
+        month: variables?.date.getMonth(),
+        year: variables?.date.getFullYear(),
+      });
+      utils.recipe.getAll.invalidate();
     },
   });
 };
