@@ -50,15 +50,15 @@ export const calendarEntryRouter = createTRPCRouter({
       });
     }),
 
-  getByMonth: protectedProcedure
-    .input(z.object({ month: z.number(), year: z.number() }))
+  getByDateRange: protectedProcedure
+    .input(z.object({ start: z.date(), end: z.date() }))
     .query(async ({ ctx, input }) => {
       return ctx.db.calendarEntry.findMany({
         where: {
           userId: ctx.session.user.id,
           date: {
-            gte: new Date(input.year, input.month, 1),
-            lt: new Date(input.year, input.month + 1, 1),
+            gte: input.start,
+            lt: input.end,
           },
         },
         orderBy: [{ date: "asc" }, { order: "asc" }],

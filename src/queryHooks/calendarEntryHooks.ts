@@ -1,17 +1,14 @@
 import { api } from "~/utils/api";
 
-export const useGetCalendarEntriesByMonth = (month: number, year: number) => {
-  return api.calendarEntry.getByMonth.useQuery({ month, year });
+export const useGetCalendarEntriesByDateRange = (start: Date, end: Date) => {
+  return api.calendarEntry.getByDateRange.useQuery({ start, end });
 };
 
 export const useCreateCalendarEntry = () => {
   const utils = api.useUtils();
   return api.calendarEntry.createWithExistingRecipe.useMutation({
-    onSettled: (variables) => {
-      utils.calendarEntry.getByMonth.invalidate({
-        month: variables?.date.getMonth(),
-        year: variables?.date.getFullYear(),
-      });
+    onSettled: () => {
+      utils.calendarEntry.getByDateRange.invalidate();
     },
   });
 };
@@ -19,11 +16,8 @@ export const useCreateCalendarEntry = () => {
 export const useCreateCalendarEntryWithNewRecipe = () => {
   const utils = api.useUtils();
   return api.calendarEntry.createEntryWithNewRecipe.useMutation({
-    onSettled: (variables) => {
-      utils.calendarEntry.getByMonth.invalidate({
-        month: variables?.date.getMonth(),
-        year: variables?.date.getFullYear(),
-      });
+    onSettled: () => {
+      utils.calendarEntry.getByDateRange.invalidate();
       utils.recipe.getAll.invalidate();
     },
   });
@@ -33,7 +27,7 @@ export const useUpdateCalendarEntry = () => {
   const utils = api.useUtils();
   return api.calendarEntry.update.useMutation({
     onSettled: () => {
-      utils.calendarEntry.getByMonth.invalidate();
+      utils.calendarEntry.getByDateRange.invalidate();
     },
   });
 };
@@ -42,7 +36,7 @@ export const useDeleteCalendarEntry = () => {
   const utils = api.useUtils();
   return api.calendarEntry.delete.useMutation({
     onSettled: () => {
-      utils.calendarEntry.getByMonth.invalidate();
+      utils.calendarEntry.getByDateRange.invalidate();
     },
   });
 };
