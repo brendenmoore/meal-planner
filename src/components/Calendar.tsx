@@ -9,26 +9,11 @@ import {
   startOfMonth,
   subDays,
 } from "date-fns";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "~/components/ui/dialog";
-import { Input } from "~/components/ui/input";
-import { Button } from "~/components/ui/button";
-import { ScrollArea } from "~/components/ui/scroll-area";
-import {
-  useCreateCalendarEntryWithNewRecipe,
-  useGetCalendarEntriesByDateRange,
-} from "~/queryHooks/calendarEntryHooks";
+import { useGetCalendarEntriesByDateRange } from "~/queryHooks/calendarEntryHooks";
 import { CalendarDay } from "./CalendarDay";
+import { CalendarDayDialog } from "./CalendarDayDialog";
 
 export function Calendar() {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [newRecipe, setNewRecipe] = useState("");
-
   const currentDate = new Date();
   const startOfCurrentMonth = startOfMonth(currentDate);
   const endOfCurrentMonth = endOfMonth(currentDate);
@@ -44,7 +29,6 @@ export function Calendar() {
     startDate,
     endDate,
   );
-  const addEntryWithNewRecipe = useCreateCalendarEntryWithNewRecipe();
 
   const calendarDays = [];
   let day = startDate;
@@ -53,16 +37,6 @@ export function Calendar() {
     calendarDays.push(day);
     day = addDays(day, 1);
   }
-
-  const handleAddRecipe = () => {
-    if (selectedDate && newRecipe) {
-      addEntryWithNewRecipe.mutate({
-        name: newRecipe,
-        date: selectedDate,
-      });
-      setNewRecipe("");
-    }
-  };
 
   const getRecipesForDate = (date: Date) => {
     return calendarEntries?.filter((entry) => {
@@ -91,57 +65,15 @@ export function Calendar() {
           const isCurrentMonth = date.getMonth() === currentDate.getMonth();
           const isCurrentDay = isToday(date);
           return (
-            <Dialog key={index}>
-              <DialogTrigger asChild>
-                <CalendarDay
-                  date={date}
-                  entries={dayEntries}
-                  isCurrentMonth={isCurrentMonth}
-                  isCurrentDay={isCurrentDay}
-                  onClick={() => {
-                    setSelectedDate(date);
-                    handleAddRecipe();
-                  }}
-                />
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>{format(date, "MMMM d, yyyy")}</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <ScrollArea className="h-[200px]">
-                    {dayEntries && dayEntries.length > 0 ? (
-                      <ul className="space-y-2">
-                        {dayEntries.map((entry) => (
-                          <li key={entry.id} className="text-sm">
-                            {entry.recipe.name}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">
-                        No recipes for this day.
-                      </p>
-                    )}
-                  </ScrollArea>
-                  <div className="flex space-x-2">
-                    <Input
-                      placeholder="Add a recipe"
-                      value={newRecipe}
-                      onChange={(e) => setNewRecipe(e.target.value)}
-                    />
-                    <Button
-                      onClick={() => {
-                        setSelectedDate(date);
-                        handleAddRecipe();
-                      }}
-                    >
-                      Add
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <CalendarDayDialog key={index} date={date} entries={dayEntries}>
+              <CalendarDay
+                date={date}
+                entries={dayEntries}
+                isCurrentMonth={isCurrentMonth}
+                isCurrentDay={isCurrentDay}
+                onClick={() => {}}
+              />
+            </CalendarDayDialog>
           );
         })}
       </div>
