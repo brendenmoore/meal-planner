@@ -10,8 +10,9 @@ import {
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import { ScrollArea } from "~/components/ui/scroll-area";
-import { useCreateCalendarEntryWithNewRecipe } from "~/queryHooks/calendarEntryHooks";
+import { useCreateCalendarEntryWithNewRecipe, useDeleteCalendarEntry } from "~/queryHooks/calendarEntryHooks";
 import { CalendarEntry, Recipe } from "@prisma/client";
+import { X } from "lucide-react"; // Import the X icon from lucide-react
 
 interface CalendarDayEntry extends CalendarEntry {
   recipe: Recipe;
@@ -26,6 +27,7 @@ interface CalendarDayDialogProps {
 export function CalendarDayDialog({ date, entries, children }: CalendarDayDialogProps) {
   const [newRecipe, setNewRecipe] = useState("");
   const addEntryWithNewRecipe = useCreateCalendarEntryWithNewRecipe();
+  const deleteCalendarEntry = useDeleteCalendarEntry();
 
   const handleAddRecipe = () => {
     if (newRecipe) {
@@ -35,6 +37,10 @@ export function CalendarDayDialog({ date, entries, children }: CalendarDayDialog
       });
       setNewRecipe("");
     }
+  };
+
+  const handleRemoveRecipe = (entryId: number) => {
+    deleteCalendarEntry.mutate({id: entryId});
   };
 
   return (
@@ -49,8 +55,16 @@ export function CalendarDayDialog({ date, entries, children }: CalendarDayDialog
             {entries && entries.length > 0 ? (
               <ul className="space-y-2">
                 {entries.map((entry) => (
-                  <li key={entry.id} className="text-sm">
-                    {entry.recipe.name}
+                  <li key={entry.id} className="flex items-center justify-between text-sm">
+                    <span>{entry.recipe.name}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveRecipe(entry.id)}
+                    >
+                      <X className="h-4 w-4" />
+                      <span className="sr-only">Remove recipe</span>
+                    </Button>
                   </li>
                 ))}
               </ul>
