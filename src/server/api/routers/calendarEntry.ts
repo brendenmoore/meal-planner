@@ -51,15 +51,16 @@ export const calendarEntryRouter = createTRPCRouter({
     }),
 
   getByDateRange: protectedProcedure
-    .input(z.object({ start: z.date(), end: z.date() }))
+    .input(z.object({ start: z.date(), end: z.date() }).optional())
     .query(async ({ ctx, input }) => {
       return ctx.db.calendarEntry.findMany({
         where: {
           userId: ctx.session.user.id,
-          date: {
+          date: input ? {
             gte: input.start,
-            lt: input.end,
-          },
+                lt: input.end,
+              }
+            : undefined,
         },
         orderBy: [{ date: "asc" }, { order: "asc" }],
         include: { recipe: true },
