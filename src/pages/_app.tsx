@@ -16,6 +16,11 @@ const MyApp: AppType<{ session: Session | null }> = ({
       <div className={GeistSans.className}>
         <Component {...pageProps} />
       </div>
+      <style jsx global>{`
+        :root {
+          --font-geist-sans: ${GeistSans.style.fontFamily};
+        }
+      `}</style>
     </SessionProvider>
   );
 };

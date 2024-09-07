@@ -29,12 +29,14 @@ export function Calendar() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [newRecipe, setNewRecipe] = useState("");
 
-  const currentDate = new Date(2024, 5, 1);
+  const currentDate = new Date();
   const startOfCurrentMonth = startOfMonth(currentDate);
   const endOfCurrentMonth = endOfMonth(currentDate);
   const startDate = subDays(startOfCurrentMonth, getDay(startOfCurrentMonth));
   const daysInMonth = endOfCurrentMonth.getDate();
-  const weeksToShow = Math.ceil((getDay(startOfCurrentMonth) + daysInMonth) / 7);
+  const weeksToShow = Math.ceil(
+    (getDay(startOfCurrentMonth) + daysInMonth) / 7,
+  );
   const totalDays = weeksToShow * 7;
   const endDate = addDays(startDate, totalDays - 1);
 
@@ -117,7 +119,7 @@ export function Calendar() {
                         ))}
                       </ul>
                     ) : (
-                      <p className="text-muted-foreground text-sm">
+                      <p className="text-sm text-muted-foreground">
                         No recipes for this day.
                       </p>
                     )}
