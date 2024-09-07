@@ -30,7 +30,7 @@ export function Calendar() {
   const totalDays = weeksToShow * 7;
   const endDate = addDays(startDate, totalDays - 1);
 
-  const { data: calendarEntries } = useGetCalendarEntriesByDateRange(
+  const { data: calendarEntries, isLoading } = useGetCalendarEntriesByDateRange(
     startDate,
     endDate,
   );
@@ -76,7 +76,7 @@ export function Calendar() {
           size="sm"
           className="text-muted-foreground hover:text-foreground"
         >
-          <ChevronLeft className="h-4 w-4 mr-2" />
+          <ChevronLeft className="mr-2 h-4 w-4" />
           Previous
         </Button>
         <h2 className="text-2xl font-bold">
@@ -90,7 +90,7 @@ export function Calendar() {
           className="text-muted-foreground hover:text-foreground"
         >
           Next
-          <ChevronRight className="h-4 w-4 ml-2" />
+          <ChevronRight className="ml-2 h-4 w-4" />
         </Button>
       </div>
       <div className="grid grid-cols-7 gap-1">
@@ -106,6 +106,7 @@ export function Calendar() {
           return (
             <CalendarDayDialog key={index} date={date} entries={dayEntries}>
               <CalendarDay
+                isLoading={isLoading}
                 date={date}
                 entries={dayEntries}
                 isCurrentMonth={isCurrentMonth}

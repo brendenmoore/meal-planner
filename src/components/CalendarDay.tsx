@@ -9,6 +9,7 @@ interface CalendarDayEntry extends CalendarEntry {
 
 interface CalendarDayProps {
   date: Date;
+  isLoading: boolean;
   entries?: CalendarDayEntry[];
   isCurrentMonth: boolean;
   isCurrentDay: boolean;
@@ -16,6 +17,7 @@ interface CalendarDayProps {
 }
 
 export const CalendarDay = ({
+  isLoading,
   date,
   entries,
   isCurrentMonth,
@@ -28,6 +30,7 @@ export const CalendarDay = ({
         "aspect-square cursor-pointer border p-2",
         isCurrentMonth ? "bg-white" : "bg-gray-100",
         isCurrentDay ? "border-secondary border-2" : "",
+        isLoading ? "animate-pulse bg-gray-50" : "",
       )}
       onClick={onClick}
     >
