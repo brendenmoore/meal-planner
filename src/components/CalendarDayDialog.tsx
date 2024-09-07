@@ -10,12 +10,16 @@ import {
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import { ScrollArea } from "~/components/ui/scroll-area";
-import { useCreateCalendarEntryWithNewRecipe, useDeleteCalendarEntry } from "~/queryHooks/calendarEntryHooks";
+import {
+  useCreateCalendarEntryWithNewRecipe,
+  useDeleteCalendarEntry,
+} from "~/queryHooks/calendarEntryHooks";
 import { CalendarEntry, Recipe } from "@prisma/client";
 import { X } from "lucide-react"; // Import the X icon from lucide-react
 
 interface CalendarDayEntry extends CalendarEntry {
   recipe: Recipe;
+  temp?: boolean;
 }
 
 interface CalendarDayDialogProps {
@@ -24,7 +28,11 @@ interface CalendarDayDialogProps {
   children: React.ReactNode;
 }
 
-export function CalendarDayDialog({ date, entries, children }: CalendarDayDialogProps) {
+export function CalendarDayDialog({
+  date,
+  entries,
+  children,
+}: CalendarDayDialogProps) {
   const [newRecipe, setNewRecipe] = useState("");
   const addEntryWithNewRecipe = useCreateCalendarEntryWithNewRecipe();
   const deleteCalendarEntry = useDeleteCalendarEntry();
@@ -40,7 +48,7 @@ export function CalendarDayDialog({ date, entries, children }: CalendarDayDialog
   };
 
   const handleRemoveRecipe = (entryId: number) => {
-    deleteCalendarEntry.mutate({id: entryId});
+    deleteCalendarEntry.mutate({ id: entryId });
   };
 
   return (
@@ -55,14 +63,22 @@ export function CalendarDayDialog({ date, entries, children }: CalendarDayDialog
             {entries && entries.length > 0 ? (
               <ul className="space-y-2">
                 {entries.map((entry) => (
-                  <li key={entry.id} className="flex items-center justify-between text-sm">
+                  <li
+                    key={entry.id}
+                    className="flex items-center justify-between text-sm"
+                  >
                     <span>{entry.recipe.name}</span>
                     <Button
+                      disabled={entry.temp}
                       variant="ghost"
                       size="sm"
                       onClick={() => handleRemoveRecipe(entry.id)}
                     >
-                      <X className="h-4 w-4" />
+                      {entry.temp ? (
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+                      ) : (
+                        <X className="h-4 w-4" />
+                      )}
                       <span className="sr-only">Remove recipe</span>
                     </Button>
                   </li>

@@ -1,6 +1,10 @@
-import { addDays } from "date-fns";
 import { api } from "~/utils/api";
 import { CalendarEntry, Recipe } from "@prisma/client";
+
+interface OptimisticCalendarEntry extends CalendarEntry {
+  recipe: Recipe;
+  temp: boolean;
+}
 
 export const useGetCalendarEntriesByDateRange = (start: Date, end: Date) => {
   return api.calendarEntry.getByDateRange.useQuery({ start, end });
@@ -30,13 +34,14 @@ export const useCreateCalendarEntryWithNewRecipe = () => {
         undefined,
         { queryKey: undefined },
         (old) => {
-          const newCalendarEntry: CalendarEntry & { recipe: Recipe } = {
+          const newCalendarEntry: OptimisticCalendarEntry = {
             id: Date.now(), // Temporary ID
             userId: old?.[0]?.userId ?? "",
             order: 0,
             date: newEntry.date,
             recipeId: Date.now(), // Temporary ID
             recipe: { id: Date.now(), name: newEntry.name } as Recipe,
+            temp: true,
           };
           return old ? [...old, newCalendarEntry] : [newCalendarEntry];
         },
