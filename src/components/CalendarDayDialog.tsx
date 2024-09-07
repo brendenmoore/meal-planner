@@ -90,14 +90,15 @@ export function CalendarDayDialog({
               </p>
             )}
           </ScrollArea>
-          <div className="flex space-x-2">
+          <form className="flex space-x-2" onSubmit={handleAddRecipe}>
             <Input
               placeholder="Add a recipe"
               value={newRecipe}
               onChange={(e) => setNewRecipe(e.target.value)}
+              autoFocus
             />
-            <Button onClick={handleAddRecipe}>Add</Button>
-          </div>
+            <Button type="submit">Add</Button>
+          </form>
         </div>
       </DialogContent>
     </Dialog>
