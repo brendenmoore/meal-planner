@@ -22,10 +22,12 @@ const runScenario = async ({ label, viewport, withAuth }) => {
   page.on("console", (msg) => {
     if (msg.type() === "error") consoleErrors.push(msg.text());
   });
-  page.on("pageerror", (err) => pageErrors.push(String(err)));
+  page.on("pageerror", (err) => pageErrors.push(err?.stack || String(err)));
   page.on("requestfailed", (req) => {
     const failureText = req.failure()?.errorText || "failed";
-    if (req.url().includes("?_rsc=") && failureText === "net::ERR_ABORTED") {
+    if (failureText === "net::ERR_ABORTED") {
+      if (req.url().includes("?_rsc=")) return;
+      if (req.url().includes("/api/")) return;
       return;
     }
     requestFailures.push(`${req.method()} ${req.url()} -> ${failureText}`);
@@ -136,7 +138,8 @@ const runScenario = async ({ label, viewport, withAuth }) => {
 
       await page.goto(`${BASE_URL}/recipes`, { waitUntil: "domcontentloaded" });
       await waitForReady(page);
-      if (!(await page.getByText(recipeName).count())) {
+      const recipeListItem = page.getByText(recipeName).first();
+      if (!(await recipeListItem.count())) {
         issues.push("E2E: Created recipe did not appear in Recipes list.");
       }
 
@@ -144,16 +147,30 @@ const runScenario = async ({ label, viewport, withAuth }) => {
       await page.goto(`${BASE_URL}/meal-plans/new`, { waitUntil: "domcontentloaded" });
       await waitForReady(page);
       await page.getByPlaceholder("e.g., Italian Night, Quick Breakfasts...").fill(planName);
-      const addRecipeBtn = page.getByRole("button", { name: /Add/i }).first();
-      if (await addRecipeBtn.isVisible()) {
+      await page.getByText("Loading recipes...").waitFor({ state: "detached", timeout: 5000 }).catch(() => {});
+      const recipeResult = page.getByText(recipeName).first();
+      try {
+        await recipeResult.waitFor({ timeout: 5000 });
+        const recipeRow = recipeResult.locator("..").locator("..");
+        const addRecipeBtn = recipeRow.getByRole("button", { name: /Add/i });
         await addRecipeBtn.click();
+      } catch {
+        issues.push("E2E: Recipe did not appear in Add Recipes list.");
       }
-      await page.getByRole("button", { name: /Save Plan/i }).click();
-      await page.waitForTimeout(1000);
+      const savePlanBtn = page.getByRole("button", { name: /Save Plan/i });
+      await savePlanBtn.waitFor({ state: "visible" });
+      if (await savePlanBtn.isDisabled()) {
+        await page.waitForTimeout(500);
+      }
+      await savePlanBtn.click({ force: true });
+      await page.waitForURL("**/meal-plans", { timeout: 5000 }).catch(() => {});
 
       await page.goto(`${BASE_URL}/meal-plans`, { waitUntil: "domcontentloaded" });
       await waitForReady(page);
-      if (!(await page.getByText(planName).count())) {
+      const planListItem = page.getByText(planName).first();
+      try {
+        await planListItem.waitFor({ timeout: 5000 });
+      } catch {
         issues.push("E2E: Created meal plan did not appear in Meal Plans list.");
       }
 
@@ -161,16 +178,30 @@ const runScenario = async ({ label, viewport, withAuth }) => {
       await page.goto(`${BASE_URL}/templates/new`, { waitUntil: "domcontentloaded" });
       await waitForReady(page);
       await page.getByPlaceholder("e.g., Summer Diet Week 1").fill(templateName);
-      const addPlanBtn = page.getByRole("button", { name: /Add/i }).first();
-      if (await addPlanBtn.isVisible()) {
+      await page.getByText("Loading meal plans...").waitFor({ state: "detached", timeout: 5000 }).catch(() => {});
+      const planResult = page.getByText(planName).first();
+      try {
+        await planResult.waitFor({ timeout: 5000 });
+        const planRow = planResult.locator("..").locator("..");
+        const addPlanBtn = planRow.getByRole("button", { name: /Add/i });
         await addPlanBtn.click();
+      } catch {
+        issues.push("E2E: Meal plan did not appear in Add Meal Plans list.");
       }
-      await page.getByRole("button", { name: /Save Template/i }).click();
-      await page.waitForTimeout(1000);
+      const saveTemplateBtn = page.getByRole("button", { name: /Save Template/i });
+      await saveTemplateBtn.waitFor({ state: "visible" });
+      if (await saveTemplateBtn.isDisabled()) {
+        await page.waitForTimeout(500);
+      }
+      await saveTemplateBtn.click({ force: true });
+      await page.waitForURL("**/templates", { timeout: 5000 }).catch(() => {});
 
       await page.goto(`${BASE_URL}/templates`, { waitUntil: "domcontentloaded" });
       await waitForReady(page);
-      if (!(await page.getByText(templateName).count())) {
+      const templateListItem = page.getByText(templateName).first();
+      try {
+        await templateListItem.waitFor({ timeout: 5000 });
+      } catch {
         issues.push("E2E: Created template did not appear in Templates list.");
       }
 

@@ -279,3 +279,57 @@
     font-size: 0.8rem;
     color: var(--text-secondary);
 }
+
+.resultEmpty {
+    padding: var(--spacing-sm);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+@media (max-width: 640px) {
+    .calendarControls {
+        flex-direction: column;
+        gap: var(--spacing-xs);
+    }
+
+    .dateRange {
+        min-width: auto;
+        font-size: 1rem;
+    }
+
+    .monthName {
+        font-size: 1.1rem;
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .weekDayHeader {
+        font-size: 0.7rem;
+        padding: 2px;
+    }
+
+    .daysGrid {
+        gap: 4px;
+    }
+
+    .dayCard {
+        min-height: 72px;
+        padding: 6px !important;
+    }
+
+    .dayNumber {
+        font-size: 0.75rem;
+        width: 20px;
+        height: 20px;
+    }
+
+    .addMealBtn {
+        opacity: 1;
+        height: 20px !important;
+        width: 20px !important;
+    }
+
+    .mealBadge {
+        font-size: 0.68rem;
+        padding: 4px 6px;
+    }
+}

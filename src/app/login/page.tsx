@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
@@ -10,6 +10,7 @@ import styles from "./page.module.css";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = useMemo(() => createClient(), []);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -51,7 +52,9 @@ export default function LoginPage() {
       setError(signInError.message);
     } else {
       setStatus("Signed in successfully.");
-      router.push("/recipes");
+      const redirectTo = searchParams.get("redirect") ?? "/recipes";
+      const safeRedirect = redirectTo.startsWith("/") ? redirectTo : "/recipes";
+      router.push(safeRedirect);
       router.refresh();
     }
 

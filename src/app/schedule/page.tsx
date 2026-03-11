@@ -1,8 +1,4 @@
-"use client";
-
-import dynamic from "next/dynamic";
-
-const ScheduleClient = dynamic(() => import("./ScheduleClient"), { ssr: false });
+import ScheduleClient from "./ScheduleClient";
 
 export default function SchedulePage() {
   return <ScheduleClient />;
