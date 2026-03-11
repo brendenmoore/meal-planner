@@ -1,66 +1,73 @@
-import Image from "next/image";
+import Link from "next/link";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Plus, Calendar, BookOpen, ShoppingCart } from "lucide-react";
 import styles from "./page.module.css";
 
 export default function Home() {
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className={styles.dashboard}>
+      <header className={styles.header}>
+        <div>
+          <h1 className={styles.greeting}>Welcome back, Chef!</h1>
+          <p className={styles.subtitle}>Here's your meal plan overview.</p>
         </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <Button className={styles.addButton}>
+          <Plus size={20} />
+          <span>New Recipe</span>
+        </Button>
+      </header>
+
+      <section className={styles.quickActions}>
+        <Link href="/schedule">
+          <Card hoverable className={styles.actionCard}>
+            <Calendar className={styles.actionIcon} size={28} />
+            <h3>Schedule</h3>
+            <p>Plan your meals for the week</p>
+          </Card>
+        </Link>
+
+        <Link href="/recipes">
+          <Card hoverable className={styles.actionCard}>
+            <BookOpen className={styles.actionIcon} size={28} />
+            <h3>Recipes</h3>
+            <p>Browse your saved recipes</p>
+          </Card>
+        </Link>
+        
+        <Link href="/shopping-list">
+          <Card hoverable className={styles.actionCard}>
+            <ShoppingCart className={styles.actionIcon} size={28} />
+            <h3>Shopping List</h3>
+            <p>Generate your grocery list</p>
+          </Card>
+        </Link>
+      </section>
+
+      <section className={styles.upcomingMeals}>
+        <div className={styles.sectionHeader}>
+          <h2>Upcoming Meals</h2>
+          <Button variant="ghost" size="sm">View All</Button>
         </div>
-      </main>
+        <div className={styles.mealGrid}>
+          {/* Placeholder for actual meal plan data */}
+          <Card className={styles.mealCard}>
+            <div className={styles.mealDate}>Today</div>
+            <div className={styles.mealContent}>
+              <div className={styles.mealTitle}>Grilled Salmon</div>
+              <div className={styles.mealMeta}>Dinner • 45 mins</div>
+            </div>
+          </Card>
+          
+          <Card className={styles.mealCard}>
+            <div className={styles.mealDate}>Tomorrow</div>
+            <div className={styles.mealContent}>
+              <div className={styles.mealTitle}>Chicken Alfredo</div>
+              <div className={styles.mealMeta}>Dinner • 30 mins</div>
+            </div>
+          </Card>
+        </div>
+      </section>
     </div>
   );
 }

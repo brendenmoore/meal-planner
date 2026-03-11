@@ -1,0 +1,341 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+}
+
+.title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: var(--spacing-xs);
+}
+
+.subtitle {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+@media (min-width: 992px) {
+    .content {
+        flex-direction: row;
+        align-items: flex-start;
+    }
+}
+
+.mainPanel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.sidebar {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+@media (min-width: 992px) {
+    .sidebar {
+        width: 350px;
+        position: sticky;
+        top: calc(var(--spacing-xl) + 80px);
+    }
+}
+
+.generatorCard {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.generatorCard h3 {
+    font-size: 1.25rem;
+    color: var(--accent-primary);
+}
+
+.dateControls {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+@media (min-width: 576px) {
+    .dateControls {
+        flex-direction: row;
+        align-items: center;
+    }
+}
+
+.dateSeparator {
+    color: var(--text-secondary);
+    text-align: center;
+    display: none;
+}
+
+@media (min-width: 576px) {
+    .dateSeparator {
+        display: block;
+        margin-top: 20px;
+    }
+}
+
+.generateBtn {
+    margin-top: auto;
+    margin-bottom: var(--spacing-md);
+}
+
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    text-align: center;
+    color: var(--text-secondary);
+    border: 1px dashed var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-xl);
+    gap: var(--spacing-md);
+}
+
+.emptyIcon {
+    color: var(--glass-border);
+    opacity: 0.5;
+}
+
+.listCard {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.listHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--glass-border);
+    padding-bottom: var(--spacing-sm);
+}
+
+.listHeader h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.itemCount {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+}
+
+.addManualForm {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: flex-start;
+}
+
+.manualBtn {
+    margin-top: auto;
+    margin-bottom: var(--spacing-md);
+}
+
+.categories {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+}
+
+.categoryGroup {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.categoryTitle {
+    font-size: 1.125rem;
+    color: var(--accent-primary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+    border-bottom: 1px dashed var(--glass-border);
+    padding-bottom: 4px;
+}
+
+.itemsList {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    list-style: none;
+    padding: 0;
+}
+
+.listItem {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.listItem:hover {
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateX(4px);
+}
+
+.listItem.checked {
+    opacity: 0.6;
+}
+
+.listItem.checked .itemName {
+    text-decoration: line-through;
+    color: var(--text-secondary);
+}
+
+.checkbox {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 2px solid var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: transparent;
+    transition: all var(--transition-fast);
+}
+
+.listItem.checked .checkbox {
+    background: var(--success);
+    border-color: var(--success);
+    color: white;
+}
+
+.itemInfo {
+    display: flex;
+    flex: 1;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.itemName {
+    font-weight: 500;
+    font-size: 1.05rem;
+}
+
+.itemAmount {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+}
+
+/* Staples Sidebar */
+.staplesHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xs);
+}
+
+.staplesHeader h3 {
+    font-size: 1.25rem;
+    color: var(--accent-primary);
+}
+
+.helperText {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-bottom: var(--spacing-md);
+}
+
+.staplesList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.stapleItem {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm);
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+}
+
+.stapleItem:hover {
+    border-color: var(--glass-border);
+}
+
+.stapleName {
+    flex: 1;
+    font-weight: 500;
+}
+
+.removeStaple {
+    color: var(--text-secondary) !important;
+    opacity: 0;
+    transition: opacity var(--transition-fast) !important;
+}
+
+.stapleItem:hover .removeStaple {
+    opacity: 1;
+}
+
+.removeStaple:hover {
+    color: var(--error) !important;
+}
+
+/* Custom Toggle Switch for Staples */
+.toggleBtn {
+    width: 44px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    position: relative;
+    border: none;
+    cursor: pointer;
+    transition: background var(--transition-normal);
+}
+
+.toggleBtn.active {
+    background: var(--success);
+}
+
+.toggleKnob {
+    width: 18px;
+    height: 18px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    transition: transform var(--transition-normal);
+}
+
+.toggleBtn.active .toggleKnob {
+    transform: translateX(20px);
+}
