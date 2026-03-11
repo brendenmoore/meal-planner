@@ -113,7 +113,7 @@ button {
 .mainContent {
   min-height: 100vh;
   padding-top: 5.5rem;
-  padding-bottom: 6rem;
+  padding-bottom: 7.5rem;
 }
 
 @media (min-width: 768px) {

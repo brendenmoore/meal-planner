@@ -9,6 +9,15 @@
     padding: env(safe-area-inset-bottom) 0;
 }
 
+.publicNavbar {
+    position: sticky;
+    top: 0;
+    bottom: auto;
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    border-top: none;
+    padding: var(--spacing-sm) 0;
+}
+
 @media (min-width: 768px) {
     .navbar {
         top: 0;
@@ -75,6 +84,12 @@
 .navLink:hover {
     color: var(--text-primary);
     transform: translateY(-2px);
+}
+
+.authLinks {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-left: auto;
 }
 
 @media (min-width: 768px) {

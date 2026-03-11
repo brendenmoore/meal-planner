@@ -1,0 +1,31 @@
+{
+  "desktop": {
+    "label": "desktop",
+    "issues": [],
+    "observations": [],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "requestFailures": []
+  },
+  "mobile": {
+    "label": "mobile",
+    "issues": [],
+    "observations": [],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "requestFailures": []
+  },
+  "desktopAuth": {
+    "label": "desktop-auth",
+    "issues": [],
+    "observations": [
+      "Sign up returned 'Account created' status. Email confirmation may be required.",
+      "Dialog observed: Please name your recipe before saving.",
+      "Dialog observed: Autofilled the next 14 days using the \"Standard Weekly\" template!"
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "requestFailures": []
+  },
+  "uniqueIssues": []
+}
