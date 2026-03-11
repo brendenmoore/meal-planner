@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Save, Search, GripVertical, Plus, Trash2 } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowLeft, Save, Search, GripVertical, Plus, Trash2, Loader2 } from "lucide-react";
 import { 
   DndContext, 
   closestCenter,
@@ -26,14 +27,16 @@ import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 import styles from "./page.module.css";
 
-// Mock available meal plans
-const AVAILABLE_PLANS = [
-  { id: 'p1', name: 'Italian Night', type: 'Dinner' },
-  { id: 'p2', name: 'Quick Lunch', type: 'Lunch' },
-  { id: 'p3', name: 'Pancakes & Bacon', type: 'Breakfast' },
-  { id: 'p4', name: 'Steak & Veggies', type: 'Dinner' },
-  { id: 'p5', name: 'Smoothie Bowl', type: 'Breakfast' },
-];
+type MealPlan = {
+  id: string;
+  name: string;
+};
+
+type SequenceItem = {
+  instanceId: string;
+  planId: string;
+  plan: MealPlan;
+};
 
 function SortablePlanItem({ 
   id, 
@@ -42,7 +45,7 @@ function SortablePlanItem({
   onRemove 
 }: { 
   id: string, 
-  plan: any, 
+  plan: MealPlan, 
   index: number,
   onRemove: (id: string) => void
 }) {
@@ -70,7 +73,7 @@ function SortablePlanItem({
       <div className={styles.dayLabel}>Day {index + 1}</div>
       <div className={styles.itemInfo}>
         <h4>{plan.name}</h4>
-        <span>{plan.type}</span>
+        <span>Meal Plan</span>
       </div>
       <Button 
         variant="ghost" 
@@ -85,11 +88,18 @@ function SortablePlanItem({
 }
 
 export default function NewTemplatePage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const templateId = searchParams.get("id");
+
   const [name, setName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  
-  // We use objects with a unique instance id since the same plan can be used multiple times
-  const [sequence, setSequence] = useState<Array<{instanceId: string, planId: string, plan: any}>>([]);
+  const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
+  const [sequence, setSequence] = useState<SequenceItem[]>([]);
+  const [templatePlanIds, setTemplatePlanIds] = useState<string[] | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -98,11 +108,92 @@ export default function NewTemplatePage() {
     })
   );
 
-  const filteredPlans = AVAILABLE_PLANS.filter(
-    p => p.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  useEffect(() => {
+    let mounted = true;
 
-  const addPlan = (plan: typeof AVAILABLE_PLANS[0]) => {
+    const loadMealPlans = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      const res = await fetch("/api/meal-plans");
+      if (res.status === 401) {
+        router.push("/login");
+        return;
+      }
+
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data?.error ?? "Failed to load meal plans.");
+      } else if (mounted) {
+        setMealPlans(data.mealPlans ?? []);
+      }
+
+      if (mounted) setIsLoading(false);
+    };
+
+    loadMealPlans();
+
+    return () => {
+      mounted = false;
+    };
+  }, [router]);
+
+  useEffect(() => {
+    if (!templateId) return;
+
+    let mounted = true;
+
+    const loadTemplate = async () => {
+      const res = await fetch(`/api/templates/${templateId}`);
+      if (res.status === 401) {
+        router.push("/login");
+        return;
+      }
+
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data?.error ?? "Failed to load template.");
+        return;
+      }
+
+      if (mounted) {
+        setName(data.template?.name ?? "");
+        setTemplatePlanIds(data.template?.meal_plan_ids ?? []);
+      }
+    };
+
+    loadTemplate();
+
+    return () => {
+      mounted = false;
+    };
+  }, [router, templateId]);
+
+  useEffect(() => {
+    if (!templatePlanIds) return;
+    if (mealPlans.length === 0 && templatePlanIds.length > 0) return;
+
+    const updatedSequence = templatePlanIds
+      .map((planId, index) => {
+        const plan = mealPlans.find((item) => item.id === planId);
+        if (!plan) return null;
+        return {
+          instanceId: `inst-${planId}-${index}-${Date.now()}`,
+          planId: plan.id,
+          plan,
+        };
+      })
+      .filter((item): item is SequenceItem => Boolean(item));
+
+    setSequence(updatedSequence);
+  }, [mealPlans, templatePlanIds]);
+
+  const filteredPlans = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    return mealPlans.filter((plan) => plan.name.toLowerCase().includes(query));
+  }, [mealPlans, searchQuery]);
+
+  const addPlan = (plan: MealPlan) => {
     setSequence([...sequence, {
       instanceId: `inst-${Date.now()}-${Math.random()}`,
       planId: plan.id,
@@ -126,6 +217,44 @@ export default function NewTemplatePage() {
     }
   };
 
+  const handleSave = async () => {
+    if (!name.trim() || sequence.length === 0) return;
+
+    setIsSaving(true);
+    setError(null);
+
+    const payload = {
+      name: name.trim(),
+      meal_plan_ids: sequence.map((item) => item.planId),
+    };
+
+    try {
+      const res = await fetch(templateId ? `/api/templates/${templateId}` : "/api/templates", {
+        method: templateId ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.status === 401) {
+        router.push("/login");
+        return;
+      }
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data?.error ?? "Failed to save template.");
+      }
+
+      router.push("/templates");
+      router.refresh();
+    } catch (saveError) {
+      console.error("Template save error:", saveError);
+      setError("Failed to save template. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -135,11 +264,11 @@ export default function NewTemplatePage() {
               <ArrowLeft size={20} />
             </Button>
           </Link>
-          <h1 className={styles.title}>Create Template</h1>
+          <h1 className={styles.title}>{templateId ? "Edit Template" : "Create Template"}</h1>
         </div>
-        <Button disabled={!name || sequence.length === 0}>
-          <Save size={20} />
-          <span>Save Template</span>
+        <Button disabled={!name || sequence.length === 0 || isSaving} onClick={handleSave}>
+          {isSaving ? <Loader2 size={18} className={styles.spinner} /> : <Save size={20} />}
+          <span>{isSaving ? "Saving..." : "Save Template"}</span>
         </Button>
       </header>
 
@@ -158,6 +287,7 @@ export default function NewTemplatePage() {
             <p className={styles.helperText}>
               A template is a sequence of meal plans that you can easily apply to your calendar in a loop.
             </p>
+            {error && <p className={styles.errorText}>{error}</p>}
           </Card>
 
           <Card className={styles.selectedCard}>
@@ -211,14 +341,16 @@ export default function NewTemplatePage() {
             </div>
             
             <div className={styles.searchResults}>
-              {filteredPlans.length === 0 ? (
+              {isLoading ? (
+                <p className={styles.noResults}>Loading meal plans...</p>
+              ) : filteredPlans.length === 0 ? (
                 <p className={styles.noResults}>No plans found.</p>
               ) : (
                 filteredPlans.map(plan => (
                   <div key={plan.id} className={styles.resultItem}>
                     <div className={styles.resultInfo}>
                       <h4>{plan.name}</h4>
-                      <span>{plan.type}</span>
+                      <span>Meal Plan</span>
                     </div>
                     <Button 
                       variant="secondary" 

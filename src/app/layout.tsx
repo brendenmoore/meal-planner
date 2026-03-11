@@ -19,7 +19,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <Navbar />
-        <main className="container pt-16 pb-24 md:pt-24 md:pb-16 min-h-screen">
+        <main className="container mainContent">
           {children}
         </main>
       </body>

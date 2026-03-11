@@ -1,0 +1,46 @@
+.container {
+  min-height: calc(100vh - 120px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card {
+  width: min(520px, 92vw);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.title {
+  margin: 0;
+  font-size: 28px;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.form {
+  display: grid;
+  gap: 16px;
+}
+
+.actions {
+  display: grid;
+  gap: 12px;
+}
+
+.error {
+  margin: 0;
+  color: #d15050;
+  font-size: 14px;
+}
+
+.status {
+  margin: 0;
+  color: #5f8f6b;
+  font-size: 14px;
+}

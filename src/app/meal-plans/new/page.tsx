@@ -1,39 +1,111 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Save, Search, Plus, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Save, Search, Plus, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 import styles from "./page.module.css";
 
-// Mock available recipes to add to the meal plan
-const AVAILABLE_RECIPES = [
-  { id: '1', name: 'Spaghetti Bolognese', time: '45 mins' },
-  { id: '2', name: 'Chicken Caesar Salad', time: '20 mins' },
-  { id: '3', name: 'Avocado Toast', time: '10 mins' },
-  { id: '4', name: 'Garlic Bread', time: '15 mins' },
-  { id: '5', name: 'Grilled Salmon', time: '30 mins' },
-];
+type Recipe = {
+  id: string;
+  name: string;
+};
 
 export default function NewMealPlanPage() {
+  const router = useRouter();
   const [name, setName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedRecipes, setSelectedRecipes] = useState<typeof AVAILABLE_RECIPES>([]);
+  const [availableRecipes, setAvailableRecipes] = useState<Recipe[]>([]);
+  const [selectedRecipes, setSelectedRecipes] = useState<Recipe[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const filteredRecipes = AVAILABLE_RECIPES.filter(
-    r => r.name.toLowerCase().includes(searchQuery.toLowerCase()) && 
-         !selectedRecipes.find(sr => sr.id === r.id)
-  );
+  useEffect(() => {
+    let mounted = true;
 
-  const addRecipe = (recipe: typeof AVAILABLE_RECIPES[0]) => {
+    const load = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      const res = await fetch("/api/recipes");
+      if (res.status === 401) {
+        router.push("/login");
+        return;
+      }
+
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data?.error ?? "Failed to load recipes.");
+      } else if (mounted) {
+        setAvailableRecipes(data.recipes ?? []);
+      }
+
+      if (mounted) setIsLoading(false);
+    };
+
+    load();
+
+    return () => {
+      mounted = false;
+    };
+  }, [router]);
+
+  const filteredRecipes = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    return availableRecipes.filter(
+      (recipe) =>
+        recipe.name.toLowerCase().includes(query) &&
+        !selectedRecipes.find((sr) => sr.id === recipe.id)
+    );
+  }, [availableRecipes, searchQuery, selectedRecipes]);
+
+  const addRecipe = (recipe: Recipe) => {
     setSelectedRecipes([...selectedRecipes, recipe]);
     setSearchQuery("");
   };
 
   const removeRecipe = (id: string) => {
     setSelectedRecipes(selectedRecipes.filter(r => r.id !== id));
+  };
+
+  const handleSave = async () => {
+    if (!name.trim() || selectedRecipes.length === 0) return;
+
+    setIsSaving(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/meal-plans", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          recipe_ids: selectedRecipes.map((recipe) => recipe.id),
+        }),
+      });
+
+      if (res.status === 401) {
+        router.push("/login");
+        return;
+      }
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data?.error ?? "Failed to save meal plan.");
+      }
+
+      router.push("/meal-plans");
+      router.refresh();
+    } catch (saveError) {
+      console.error("Meal plan save error:", saveError);
+      setError("Failed to save meal plan. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -47,9 +119,9 @@ export default function NewMealPlanPage() {
           </Link>
           <h1 className={styles.title}>Create Meal Plan</h1>
         </div>
-        <Button disabled={!name || selectedRecipes.length === 0}>
-          <Save size={20} />
-          <span>Save Plan</span>
+        <Button disabled={!name || selectedRecipes.length === 0 || isSaving} onClick={handleSave}>
+          {isSaving ? <Loader2 size={18} className={styles.spinner} /> : <Save size={20} />}
+          <span>{isSaving ? "Saving..." : "Save Plan"}</span>
         </Button>
       </header>
 
@@ -69,6 +141,7 @@ export default function NewMealPlanPage() {
 
           <Card className={styles.selectedCard}>
             <h3>Included Recipes ({selectedRecipes.length})</h3>
+            {error && <p className={styles.errorText}>{error}</p>}
             
             {selectedRecipes.length === 0 ? (
               <div className={styles.emptyState}>
@@ -113,14 +186,16 @@ export default function NewMealPlanPage() {
             </div>
             
             <div className={styles.searchResults}>
-              {filteredRecipes.length === 0 ? (
+              {isLoading ? (
+                <p className={styles.noResults}>Loading recipes...</p>
+              ) : filteredRecipes.length === 0 ? (
                 <p className={styles.noResults}>No recipes found.</p>
               ) : (
                 filteredRecipes.map(recipe => (
                   <div key={recipe.id} className={styles.resultItem}>
                     <div className={styles.resultInfo}>
                       <h4>{recipe.name}</h4>
-                      <span>{recipe.time}</span>
+                      <span>Recipe</span>
                     </div>
                     <Button 
                       variant="secondary" 

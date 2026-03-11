@@ -109,3 +109,16 @@ button {
   margin: 0 auto;
   padding: 0 var(--spacing-md);
 }
+
+.mainContent {
+  min-height: 100vh;
+  padding-top: 5.5rem;
+  padding-bottom: 6rem;
+}
+
+@media (min-width: 768px) {
+  .mainContent {
+    padding-top: 6.5rem;
+    padding-bottom: 4rem;
+  }
+}

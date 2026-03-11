@@ -85,6 +85,16 @@
     min-height: 400px;
 }
 
+.errorText {
+    color: var(--error);
+    font-size: 0.9rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
 .emptyState {
     display: flex;
     align-items: center;
@@ -212,4 +222,13 @@
     color: var(--text-secondary);
     padding: var(--spacing-lg) 0;
     font-size: 0.9rem;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }

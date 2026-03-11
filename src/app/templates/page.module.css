@@ -118,3 +118,8 @@
 .footer {
     margin-top: auto;
 }
+
+.editLink {
+    display: block;
+    width: 100%;
+}

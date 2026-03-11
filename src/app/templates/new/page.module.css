@@ -77,6 +77,16 @@
     font-size: 0.9rem;
 }
 
+.errorText {
+    color: var(--error);
+    font-size: 0.9rem;
+    margin-top: var(--spacing-sm);
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
 .sequenceHeader {
     display: flex;
     justify-content: space-between;
@@ -125,7 +135,7 @@
     position: relative;
 }
 
-.selectedItem.dragging {
+.dragging {
     box-shadow: var(--glass-shadow);
     border-color: var(--accent-primary);
 }
@@ -240,4 +250,13 @@
     color: var(--text-secondary);
     padding: var(--spacing-lg) 0;
     font-size: 0.9rem;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }

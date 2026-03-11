@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, Camera, Plus, Trash2, Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -13,7 +14,9 @@ export default function AddRecipePage() {
   const [ingredients, setIngredients] = useState([{ id: 1, name: "", amount: "" }]);
   const [instructions, setInstructions] = useState("");
   const [isExtracting, setIsExtracting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   const addIngredient = () => {
     setIngredients([...ingredients, { id: Date.now(), name: "", amount: "" }]);
@@ -81,6 +84,53 @@ export default function AddRecipePage() {
     }
   };
 
+  const handleSave = async () => {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      alert("Please name your recipe before saving.");
+      return;
+    }
+
+    setIsSaving(true);
+
+    const cleanedIngredients = ingredients
+      .map((ing) => ({
+        name: ing.name.trim(),
+        amount: ing.amount.trim(),
+      }))
+      .filter((ing) => ing.name || ing.amount);
+
+    try {
+      const res = await fetch("/api/recipes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: trimmedName,
+          instructions: instructions.trim(),
+          ingredients: cleanedIngredients,
+        }),
+      });
+
+      if (res.status === 401) {
+        router.push("/login");
+        return;
+      }
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data?.error ?? "Failed to save recipe.");
+      }
+
+      router.push("/recipes");
+      router.refresh();
+    } catch (error) {
+      console.error("Save error:", error);
+      alert("Failed to save recipe. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -92,9 +142,9 @@ export default function AddRecipePage() {
           </Link>
           <h1 className={styles.title}>New Recipe</h1>
         </div>
-        <Button>
-          <Save size={20} />
-          <span>Save Recipe</span>
+        <Button onClick={handleSave} disabled={isSaving}>
+          {isSaving ? <Loader2 size={18} className={styles.spinner} /> : <Save size={20} />}
+          <span>{isSaving ? "Saving..." : "Save Recipe"}</span>
         </Button>
       </header>
 
