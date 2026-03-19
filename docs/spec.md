@@ -5,6 +5,7 @@
 - [x] ability to extend leftovers to future days
 - [ ] quick create recipes
 - [ ] quick group meals
+- [ ] home page, more mobile UX specifications
 
 # Meal Planner App Specification
 
@@ -27,7 +28,7 @@ So the basic user flow is:
 2. User creates meals and adds recipes to them. (optional)
 3. User builds a rotation by adding meals/recipes and assigning each a target frequency. (optional)
 4. User enters Plan Mode and schedules meals by dragging from the **What's Next** panel onto the calendar. Or by clicking any date and searching and adding any meal/recipe.
-5. The What's Next panel automatically re-sorts as meals are scheduled. Deleting a past schedule entry resets that meal's urgency.
+5. The What's Next panel automatically re-sorts as meals are scheduled. Deleting a past schedule entry simply recalculates that meal's urgency from the remaining history.
 6. User generates a shopping list from the schedule.
 7. User can add/remove additional items to the shopping list. (optional)
 
@@ -103,7 +104,6 @@ RotationEntry {
   type: 'meal' | 'recipe',
   referenceId: string,         // ID of the meal or recipe
   targetFrequencyDays: number, // How often the user wants this scheduled (e.g. 14 = every 2 weeks)
-  lastScheduledAt?: Date,      // Updated automatically when a matching item is added to the schedule
   servingsOverride?: number,   // Overrides Recipe.servings for this rotation entry (e.g. always double this one)
 }
 ```
@@ -124,7 +124,7 @@ The rotation queue is computed on the fly — it is never stored. The sort order
 urgencyScore = daysSinceLastScheduled / targetFrequencyDays
 ```
 
-Entries with a higher urgency score (most overdue relative to their target) appear first. Entries that have never been scheduled are treated as maximally overdue. `lastScheduledAt` is updated automatically whenever the meal or recipe is added to the schedule; deleting a past schedule entry resets it, causing the entry to rise back up the ranking.
+Entries with a higher urgency score (most overdue relative to their target) appear first. Entries that have never been scheduled are treated as maximally overdue. `lastScheduledAt` is a derived value representing the most recent scheduled occurrence of that meal/recipe in the schedule history; deleting an occurrence simply recalculates the score from the remaining history.
 
 ### 2.6 MealSlot
 
@@ -187,14 +187,18 @@ RecurringSchedule {
 
 ### 2.9 Shopping List
 
-A generated shopping list based on a specific date range of the schedule. Once generated, items can be manually added, edited, or removed.
+A generated shopping list based on a specific date range of the schedule. There is only one active shopping list at a time, treated as a disposable working document. `ShoppingList.items` stores the raw, unmerged source rows; grouped merged views are computed dynamically by the UI.
 
 ```
 ShoppingListItem {
   id: string,
   ingredient: Ingredient,
   isChecked: boolean,
-  sourceRecipeIds?: string[], // IDs of the recipes this ingredient came from (for grouping/subtext)
+  isGenerated: boolean, // true if computed from schedule, false if manually added/modified
+  sourceType?: 'recipe' | 'meal' | 'manual' | 'staple',
+  sourceRecipeId?: string,
+  sourceMealId?: string,
+  sourceScheduleItemId?: string,
 }
 ```
 
@@ -204,7 +208,7 @@ ShoppingList {
   name: string,
   dateRangeStart: Date,
   dateRangeEnd: Date,
-  items: ShoppingListItem[],
+  items: ShoppingListItem[], // Raw unmerged source rows; UI handles grouped merging
 }
 ```
 
@@ -325,13 +329,13 @@ Leftovers allow a meal to span multiple days without duplicating shopping list i
 - Deleting the original item also removes all its linked leftovers.
 - Individual leftover days can be deleted independently (e.g. if you ran out of food earlier than expected).
 
-**Shopping list:** Leftover items (`isLeftover: true`) contribute no ingredients. Only the original item is counted, using its resolved servings value to cover the full multi-day batch.
+**Shopping list:** Extending a meal as leftovers does not change shopping list quantities. The original scheduled item is assumed to already represent the full batch needed for all leftover days. If the user needs more food, they manually increase the servings on the original item.
 
 #### Plan Mode — What's Next Panel
 
 When the user enters **Plan Mode**, a **What's Next** panel is shown alongside the calendar displaying rotation entries sorted by urgency score (most overdue first).
 
-- The user drags meals from the What's Next panel onto any calendar day to schedule them. The entry is then removed from the panel (it has been assigned) and its `lastScheduledAt` is updated.
+- The user drags meals from the What's Next panel onto any calendar day to schedule them. The entry is then removed from the panel (it has been assigned) and the panel recalculates.
 - The user is never forced to follow the ranking — they can ignore the top item and drag any entry from the list.
 - The panel is always computed on the fly and automatically re-sorts as meals are scheduled.
 - The user can still manually schedule any meal or recipe not in the rotation by clicking any date and searching; the What's Next panel only surfaces rotation suggestions.
@@ -351,23 +355,25 @@ Meal slots are configured in the app's Settings. The defaults for a new account 
 
 ### 3.6 Shopping List Management
 
-- The user generates a shopping list by providing a date range (defaults to the next 7 days).
-- The app computes the required ingredients from all schedule items in that range. Leftover items (`isLeftover: true`) are skipped. Resolves multi-layer servings overrides.
-- **Global Ignore List (The "Salt" problem):** Any ingredient matching an item on the user's `Ignore List` is silently omitted from the generated list. The ignore list comes with sensible defaults (salt, water, olive oil).
-- The user can add any item on the active shopping list to the Ignore List via a submenu action ("Remove and Ignore in future"). This deletes the item from the current list and prevents it from appearing on future ones.
-- After generation, the user can freely add, modify, or remove any items on the list.
-- **Staples Quick-Add:** The user can open a "Staples" drawer/modal to view a checklist of common non-recipe items (milk, eggs, trash bags). Tapping them instantly appends them to the active shopping list.
+- The app supports **only one active shopping list** at a time. It is a disposable working document.
+- Generating a new shopping list presents two choices: **Start Fresh** (which deletes the current active list after confirmation and generates a new one) or **Cancel**.
+- The active shopping list **does not sync** with the schedule. If the schedule changes, the user must regenerate the list.
+- When generating, the app computes the required ingredients from all schedule items in the range (including both recipes and direct meal add-ons). Leftover items are skipped. Resolves multi-layer servings overrides.
+- **Global Ignore List:** Any ingredient matching an item on the user's `Ignore List` is silently omitted from the generated list. The ignore list comes with sensible defaults (salt, water, olive oil).
+- The user can add any item on the active shopping list to the Ignore List via a submenu action ("Remove and Ignore in future").
+- **Manual Edits & Provenance:** Generated items retain their source metadata. If the user only checks off or deletes an item, it stays a generated row. If they materially change the quantity, unit, or name, the item becomes a plain manual row (`isGenerated: false`).
+- **Staples Quick-Add:** The user can open a "Staples" drawer to quickly append common non-recipe items.
 
 #### View & Sort Modes
 
 The user can toggle between two primary views for the active shopping list:
 
-1. **Merge Mode (Group by Type/Aisle):** 
-   - This is the optimal view for the grocery store. Same-named ingredients are merged if their canonical units are compatible (`1 stick butter` + `1 lb butter` = `1.25 lb butter`).
-   - If units are incompatible (e.g., `1 can` and `1 cup`), they are listed as separate line items but grouped under the same ingredient name ("Beans").
-   - Merged items display a subtext layer showing exactly which recipes contributed to the total (e.g., *“3 total: 2 from Chili, 1 from Tacos”*).
+1. **Grouped by Ingredient:** 
+   - Same-named ingredients are merged only when their canonical units are identical or safely compatible.
+   - If units are incompatible, they remain as separate line items under the same ingredient heading.
+   - Merged items display a subtext layer showing exactly which recipes/meals contributed to the total.
 2. **Recipe Mode (Group by Recipe):**
-   - This view is for auditing and meal context. Ingredients are strictly grouped under the recipe they belong to.
+   - This view is for auditing and meal context. Ingredients are strictly grouped under the recipe or meal they belong to.
    - Ingredients with the same name are *not* merged in this mode.
    - Manually added items and Staples appear in an "Other" or "Manually Added" section at the bottom.
 
@@ -420,8 +426,8 @@ Parse the following ingredient list and return a JSON array. Each element should
 - "displayText": the original raw ingredient string, exactly as written
 
 Rules:
-- Convert non-standard units where unambiguous (e.g. "1 stick of butter" → quantity: 113, unit: "g", displayText: "1 stick of butter")
-- If conversion is ambiguous or would lose meaning, leave quantity and unit as null
+- Convert to canonical units where it does not destroy common pantry/packaging semantics (e.g., "1 cup of flour" → quantity: 1, unit: "cup", displayText: "1 cup of flour").
+- If conversion loses meaning or removes common packaging references (like "1 stick of butter"), leave quantity and unit as null, and preserve the raw text in displayText. Shopping list relies heavily on identical strings to merge unmapped units.
 - Do not infer information that is not present
 - Return only the JSON array, no explanation
 
