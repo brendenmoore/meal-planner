@@ -1,10 +1,10 @@
-TODO:
-- support scaling recipes on the schedule/rotation
-- support for lunch/dinner/etch on schedule/rotation (dinner rotation should not overwrite conflict with lunches)
-- spec for shopping list, staples
-- ability to extend leftovers to future days
-- quick create recipes
-- quick group meals
+# TODO:
+- [x] support scaling recipes on the schedule/rotation
+- [x] support for lunch/dinner/etc on schedule/rotation (dinner rotation should not overwrite conflict with lunches)
+- [ ] spec for shopping list, staples
+- [x] ability to extend leftovers to future days
+- [ ] quick create recipes
+- [ ] quick group meals
 
 # Meal Planner App Specification
 
@@ -20,14 +20,14 @@ Core Principles:
 - The schedule can be viewed as a calendar.
 - The shopping list can be generated from the schedule.
 - The shopping list can be generated for a specific date range.
-- A rotation is a pool of meals and recipes, each with a target frequency. The app tracks how long it has been since each was last scheduled and surfaces the most overdue ones in a priority queue for the user to drag onto the calendar.
+- A rotation is a pool of meals and recipes, each with a target frequency. The app tracks how long it has been since each was last scheduled and surfaces the most overdue ones in a **What's Next** panel for the user to drag onto the calendar.
 
 So the basic user flow is:
 1. User adds recipes to the recipe list.
 2. User creates meals and adds recipes to them. (optional)
 3. User builds a rotation by adding meals/recipes and assigning each a target frequency. (optional)
-4. User schedules meals by dragging from the rotation queue sidebar onto the calendar. Or by clicking any date and searching and adding any meal/recipe.
-5. The rotation queue automatically re-sorts as meals are scheduled. Deleting a past schedule entry resets that meal's urgency.
+4. User enters Plan Mode and schedules meals by dragging from the **What's Next** panel onto the calendar. Or by clicking any date and searching and adding any meal/recipe.
+5. The What's Next panel automatically re-sorts as meals are scheduled. Deleting a past schedule entry resets that meal's urgency.
 6. User generates a shopping list from the schedule.
 7. User can add/remove additional items to the shopping list. (optional)
 
@@ -95,7 +95,7 @@ Meal {
 
 ### 2.5 Rotation
 
-A rotation is a frequency pool of meals and recipes. Each entry has a target frequency that describes how often the user wants it scheduled. The app tracks the last time each entry was scheduled and uses this to compute a priority queue that surfaces the most overdue items first. Recipe tags are displayed in the sidebar queue so the user can see at a glance what kind of meal each entry is.
+A rotation is a frequency pool of meals and recipes. Each entry has a target frequency that describes how often the user wants it scheduled. The app tracks the last time each entry was scheduled and uses this to rank entries in the **What's Next** panel, surfacing the most overdue items first. Recipe tags are displayed in the panel so the user can see at a glance what kind of meal each entry is.
 
 ```
 RotationEntry {
@@ -124,9 +124,25 @@ The rotation queue is computed on the fly — it is never stored. The sort order
 urgencyScore = daysSinceLastScheduled / targetFrequencyDays
 ```
 
-Entries with a higher urgency score (most overdue relative to their target) appear first. Entries that have never been scheduled are treated as maximally overdue. `lastScheduledAt` is updated automatically whenever the meal or recipe is added to the schedule; deleting a past schedule entry resets it, causing the entry to rise back up the queue.
+Entries with a higher urgency score (most overdue relative to their target) appear first. Entries that have never been scheduled are treated as maximally overdue. `lastScheduledAt` is updated automatically whenever the meal or recipe is added to the schedule; deleting a past schedule entry resets it, causing the entry to rise back up the ranking.
 
-### 2.6 Schedule
+### 2.6 MealSlot
+
+A meal slot represents a named time-of-day context for schedule items, such as Breakfast, Lunch, or Dinner. Slots are user-configurable and can be shown or hidden independently. Each day on the calendar is divided into the user's visible slots.
+
+Defaults: `Lunch` and `Dinner` are created for new accounts. Additional slots (e.g. Breakfast, Snack) can be added in Settings.
+
+```
+MealSlot {
+  id: string,
+  name: string,         // e.g. 'Breakfast', 'Lunch', 'Dinner', 'Snack'
+  color: string,        // hex or token, used for calendar chips and slot headers
+  isVisible: boolean,   // if false, the slot row is hidden across all calendar days
+  displayOrder: number, // controls top-to-bottom order within a day cell
+}
+```
+
+### 2.7 Schedule
 
 A schedule entry represents a specific date. A `ScheduleItem` wrapper supports unified ordering and tracking leftovers.
 
@@ -134,14 +150,18 @@ A schedule entry represents a specific date. A `ScheduleItem` wrapper supports u
 ScheduleItem {
   id: string,
   type: 'meal' | 'recipe' | 'quick-add',
-  referenceId?: string,   // ID of the meal or recipe (omitted for quick-add)
-  quickAddLabel?: string, // Freeform label for quick-add items (e.g. 'Takeout', 'Eat out')
-  servings?: number,      // Overrides RotationEntry.servingsOverride or Recipe.servings for this specific night
-  isLeftover?: boolean,   // True if this item represents leftovers from a previous day
+  referenceId?: string,       // ID of the meal or recipe (omitted for quick-add)
+  quickAddLabel?: string,     // Freeform label for quick-add items (e.g. 'Takeout', 'Eat out')
+  slotId: string,             // Which MealSlot this item belongs to (e.g. Dinner)
+  servings?: number,          // Overrides RotationEntry.servingsOverride or Recipe.servings for this specific night
+  isLeftover?: boolean,       // True if this item represents leftovers from a previous day
+  leftoverSourceId?: string,  // ID of the original ScheduleItem this leftover was generated from
 }
 ```
 
-> **Servings cascade:** `Recipe.servings` → `RotationEntry.servingsOverride` → `ScheduleItem.servings`. Each layer overrides the previous. The shopping list uses the resolved servings value to scale ingredient quantities. Leftover items (`isLeftover: true`) contribute no ingredients to the shopping list, as the original entry's quantities already account for the full batch.
+> **Servings cascade:** `Recipe.servings` → `RotationEntry.servingsOverride` → `ScheduleItem.servings`. Each layer overrides the previous. The shopping list uses the resolved servings value to scale ingredient quantities.
+
+> **Leftover shopping list rule:** Items with `isLeftover: true` contribute **no ingredients** to the shopping list. The original item's servings already account for the full batch across all leftover days.
 
 ```
 ScheduleEntry {
@@ -151,20 +171,21 @@ ScheduleEntry {
 }
 ```
 
-### 2.7 Recurring Meals
+### 2.8 Recurring Meals
 
-Recurring meals appear on the schedule automatically on specified days. The application logic can query these when applying a rotation to avoid double-booking days that already have a recurring meal.
+Recurring meals appear on the schedule automatically on specified days and in a specific slot.
 
 ```
 RecurringSchedule {
   id: string,
   type: 'meal' | 'recipe',
   referenceId: string, // ID of the meal or recipe
-  dayOfWeek: number, // 0=Sunday, 1=Monday, ..., 6=Saturday
+  slotId: string,      // Which MealSlot this recurring meal belongs to
+  dayOfWeek: number,   // 0=Sunday, 1=Monday, ..., 6=Saturday
 }
 ```
 
-### 2.8 Shopping List
+### 2.9 Shopping List
 
 A shopping list is a collection of ingredients that are needed for a recipe.
 
@@ -239,8 +260,8 @@ ShoppingList {
   - A meal or recipe reference
   - A target frequency in days (e.g. 7 = weekly, 14 = every two weeks, 30 = monthly)
 - The user can add meals or recipes to the rotation directly from the recipe/meal detail view.
-- The user can see the priority queue for the active rotation — the sorted list of entries by urgency score — as a preview of what the app would suggest next.
-- Deleting a past schedule entry for a rotation meal resets its `lastScheduledAt`, causing it to rise back toward the top of the queue.
+- The user can see the **What's Next** panel for the active rotation — entries sorted by urgency score — as a preview of what the app would suggest next.
+- Deleting a past schedule entry for a rotation meal resets its `lastScheduledAt`, causing it to rise back toward the top of the What's Next panel.
 
 ### 3.4 Schedule Management
 
@@ -248,20 +269,58 @@ ShoppingList {
 - By default the schedule page will show the current month and the next month.
 - The user can view past and future months as well.
 - User can click on any day to open a modal to add, edit, or delete schedule entries for that day.
-- Recipes and meals can be dragged and dropped to different days.
-- The user can also add **quick-add** items to the schedule — freeform labels like "Takeout" or "Eat out" that appear on the calendar but contribute nothing to the shopping list.
-- Meals can be set on a recurring schedule, which will automatically fill the specified day of week for the current and upcoming months. When the month changes, recurring meals are automatically added for the new month.
+- Recipes and meals can be dragged and dropped to different days and to different slots within a day.
+- Dragging an item from a past calendar date to a future date reschedules it without re-entering it.
+- The user can also add **quick-add** items to any slot — freeform labels like "Takeout" or "Eat out" that appear on the calendar but contribute nothing to the shopping list.
+- Meals can be set on a recurring schedule per slot (e.g. the same lunch every weekday in the Lunch slot). When the month changes, recurring meals are automatically added for the new month.
 
-#### Rotation Queue Sidebar
+#### Meal Slot Behavior on the Calendar
 
-When a rotation is active, a sidebar is shown alongside the calendar displaying the **rotation priority queue**: the ordered list of rotation entries sorted by urgency score (most overdue first).
+Each day cell on the calendar is divided into rows, one per visible `MealSlot`, displayed in `displayOrder` order. Each slot row is labeled and color-coded with the slot's color.
 
-- The user drags meals from the sidebar queue onto any calendar day to schedule them. The meal is then removed from the queue display (it has been assigned) and its `lastScheduledAt` is updated.
-- The user is never forced to follow the queue — they can ignore the top item and drag any entry from the list.
-- The queue is always computed on the fly and automatically re-sorts as meals are scheduled.
-- The user can still manually schedule any meal or recipe not in the rotation by clicking any date and searching; the queue only surfaces rotation suggestions.
+- Schedule items are displayed as chips within their slot row, using the slot's color.
+- Empty slot rows are shown with minimal height so the user can still drop items into them.
+- If a slot is hidden (`isVisible: false`), its row is completely collapsed across all days.
+- Items can only be dropped into a visible slot row. Dragging an item to a day without targeting a specific slot defaults to the first visible slot.
+
+#### Leftovers
+
+Leftovers allow a meal to span multiple days without duplicating shopping list ingredients. Leftover items are **per-slot** — extending a dinner does not affect the lunch row on the same days.
+
+**Creating leftovers (desktop):** The user drags the right edge of a schedule item to extend it across one or more additional days — similar to extending a multi-day event in Google Calendar. Each newly covered day-slot receives a new `ScheduleItem` with `isLeftover: true` and `leftoverSourceId` pointing to the original item.
+
+**Creating leftovers (alternative):** Right-click or long-press a schedule item → "Extend as leftovers" → choose number of additional days.
+
+**Leftover display:** Leftover items show the meal/recipe name with a muted style and a "Leftovers" badge, distinguishing them from freshly cooked entries.
+
+**Editing leftovers:**
+- Editing the original item (servings, label) propagates to all linked leftover items.
+- Deleting the original item also removes all its linked leftovers.
+- Individual leftover days can be deleted independently (e.g. if you ran out of food earlier than expected).
+
+**Shopping list:** Leftover items (`isLeftover: true`) contribute no ingredients. Only the original item is counted, using its resolved servings value to cover the full multi-day batch.
+
+#### Plan Mode — What's Next Panel
+
+When the user enters **Plan Mode**, a **What's Next** panel is shown alongside the calendar displaying rotation entries sorted by urgency score (most overdue first).
+
+- The user drags meals from the What's Next panel onto any calendar day to schedule them. The entry is then removed from the panel (it has been assigned) and its `lastScheduledAt` is updated.
+- The user is never forced to follow the ranking — they can ignore the top item and drag any entry from the list.
+- The panel is always computed on the fly and automatically re-sorts as meals are scheduled.
+- The user can still manually schedule any meal or recipe not in the rotation by clicking any date and searching; the What's Next panel only surfaces rotation suggestions.
 - The user can drag a meal from a past calendar date to a future date to reschedule it without re-entering it.
-- Recurring meals already on the calendar are visually distinct from rotation-scheduled meals so the user can tell them apart at a glance.
+- Recurring meals are visually distinct from manually scheduled meals so the user can tell them apart at a glance.
+
+### 3.5 Meal Slot Settings
+
+Meal slots are configured in the app's Settings. The defaults for a new account are **Lunch** and **Dinner**.
+
+- User can add, rename, reorder, and delete meal slots.
+- Each slot has a configurable color used for chips and slot row headers on the calendar.
+- Each slot can be toggled visible/hidden from the Settings page or directly from the calendar view (e.g. a toggle chip above the calendar).
+- Hiding a slot does not delete its data — items in hidden slots are preserved and reappear if the slot is made visible again.
+- Deleting a slot is a destructive action: the user is warned that all schedule items in that slot will be deleted.
+- Slot display order can be changed by dragging in the Settings list.
 
 ---
 
