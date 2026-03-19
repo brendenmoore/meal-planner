@@ -5,7 +5,7 @@
 - [x] ability to extend leftovers to future days
 - [x] quick create recipes
 - [x] quick group meals
-- [ ] home page, more mobile UX specifications
+- [x] home page, more mobile UX specifications
 
 # Meal Planner App Specification
 
@@ -278,11 +278,11 @@ Creating a Meal from existing recipes must be incredibly fast. The app supports 
 - User can add, edit, and delete schedule entries in a calendar view.
 - By default the schedule page will show the current month and the next month.
 - The user can view past and future months as well.
-- User can click on any day to open a modal to add, edit, or delete schedule entries for that day.
+- **Adding to a Slot:** Clicking on any slot opens a unified Search/Suggest modal.
+  - The modal features a search input field. Below it, top suggestions are shown immediately: the highest priority items from the active rotation, followed by common quick-options (e.g. "Eat out").
+  - As the user types, the list filters to matching meals and recipes from the Library.
+  - If there are no matches, the user is given two options: **Quick Create** a new recipe (which stubs out an empty recipe in the Library) or create a **Quick-Add** label (a freeform text entry that contributes nothing to the shopping list).
 - Recipes and meals can be dragged and dropped to different days and to different slots within a day.
-- Dragging an item from a past calendar date to a future date reschedules it without re-entering it.
-- **Quick Create Recipes:** If the user searches for a meal/recipe that doesn't exist, they can instantly hit "Create 'name'" to stub out an empty recipe in the Library and place it straight onto the schedule.
-- The user can also add **quick-add** items to any slot — freeform labels like "Takeout" or "Eat out" that appear on the calendar but contribute nothing to the shopping list.
 - Meals can be set on a recurring schedule per slot (e.g. the same lunch every weekday in the Lunch slot). When the month changes, recurring meals are automatically added for the new month.
 
 #### Meal Slot Behavior on the Calendar
@@ -311,9 +311,9 @@ Leftovers allow a meal to span multiple days without duplicating shopping list i
 
 **Shopping list:** Extending a meal as leftovers does not change shopping list quantities. The original scheduled item is assumed to already represent the full batch needed for all leftover days. If the user needs more food, they manually increase the servings on the original item.
 
-#### Plan Mode — What's Next Panel
+#### Plan Mode — What's Next Panel (Desktop Only)
 
-When the user enters **Plan Mode**, a **What's Next** panel is shown alongside the calendar displaying rotation entries sorted by urgency score (most overdue first).
+On wider screens, the user can enter **Plan Mode**, which opens a sticky **What's Next** panel alongside the calendar displaying the full rotation queue sorted by urgency score.
 
 - The user drags meals from the What's Next panel onto any calendar day to schedule them. The entry is then removed from the panel (it has been assigned) and the panel recalculates.
 - The user is never forced to follow the ranking — they can ignore the top item and drag any entry from the list.
@@ -356,6 +356,35 @@ The user can toggle between two primary views for the active shopping list:
    - This view is for auditing and meal context. Ingredients are strictly grouped under the recipe or meal they belong to.
    - Ingredients with the same name are *not* merged in this mode.
    - Manually added items and Staples appear in an "Other" or "Manually Added" section at the bottom.
+
+### 3.7 Mobile Experience
+
+To provide a first-class mobile experience, certain desktop patterns (like drag-and-drop from a sidebar) are adapted to touch-friendly interfaces.
+
+#### 1. Mobile Dashboard (Home)
+Instead of landing on a dense full-month calendar, mobile users land on a "Today" dashboard that provides immediate context:
+- **Up Next:** Large glanceable cards showing Today's and Tomorrow's scheduled meals. Tapping one goes straight into "Prepare Mode".
+- **Shopping Status:** A quick widget showing "X items on active list" with a call to action to "Go to Store" (opens the shopping list).
+- **Quick Actions:** A prominently floating `(+)` button to quickly import a recipe or create a meal, and a "Plan Next Week" button.
+
+#### 2. Mobile Plan Mode (Unified Scheduling)
+Because dragging across a month is frustrating on small screens, the core mobile scheduling interaction relies entirely on the unified Search/Suggest UI:
+- The mobile schedule is presented as a vertically scrolling agenda.
+- Tapping an empty slot opens the **Search/Suggest Bottom Sheet** (the mobile equivalent of the desktop slot-click modal).
+- It instantly surfaces the top recommended meals from the rotation queue. The user can tap a recommendation to snap it into the slot, or use the input field to search, stub out a new recipe, or create a quick-add label.
+- The persistent "What's Next" sticky sidebar and drag-and-drop flows from desktop are intentionally omitted on mobile.
+
+#### 3. Kitchen Companion (Prepare Mode)
+When cooking, the mobile phone sits on the counter and behaves as a dedicated kitchen tool:
+- **Wakelock:** The app prevents the screen from sleeping while in Prepare Mode.
+- **Sticky Tabs:** `[ Ingredients ]` and `[ Directions ]` are split into sticky tabs or stacked vertically. Checking off an ingredient fades it out so it doesn't clutter the screen while reading directions.
+- **Inline Timers:** If a direction step includes a `timerMinutes` value, a button is rendered to instantly start a local device countdown timer.
+
+#### 4. Mobile Shopping List
+The Shopping List is optimized for one-handed use while pushing a grocery cart:
+- **Aisle Mode Default:** Opens directly to "Grouped by Ingredient" for efficient shopping.
+- **Large Touch Targets:** Oversized checkboxes ensure easy tapping while moving.
+- **Swipe Actions:** Swiping left on an item reveals actions, including "Delete" and a "Hide & Ignore" button (which adds it to the Global Ignore List).
 
 ---
 
