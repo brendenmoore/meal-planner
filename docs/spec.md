@@ -1,7 +1,7 @@
 # TODO:
 - [x] support scaling recipes on the schedule/rotation
 - [x] support for lunch/dinner/etc on schedule/rotation (dinner rotation should not overwrite conflict with lunches)
-- [ ] spec for shopping list, staples
+- [x] spec for shopping list, staples
 - [x] ability to extend leftovers to future days
 - [ ] quick create recipes
 - [ ] quick group meals
@@ -187,13 +187,40 @@ RecurringSchedule {
 
 ### 2.9 Shopping List
 
-A shopping list is a collection of ingredients that are needed for a recipe.
+A generated shopping list based on a specific date range of the schedule. Once generated, items can be manually added, edited, or removed.
+
+```
+ShoppingListItem {
+  id: string,
+  ingredient: Ingredient,
+  isChecked: boolean,
+  sourceRecipeIds?: string[], // IDs of the recipes this ingredient came from (for grouping/subtext)
+}
+```
 
 ```
 ShoppingList {
   id: string,
   name: string,
-  ingredients: Ingredient[],
+  dateRangeStart: Date,
+  dateRangeEnd: Date,
+  items: ShoppingListItem[],
+}
+```
+
+### 2.10 Staples & Ignore List
+
+```
+StapleItem {
+  id: string,
+  name: string, // Common item (e.g., 'Milk', 'Paper Towels')
+}
+```
+
+```
+IgnoreItem {
+  id: string,
+  name: string, // Normalised ingredient name to silently drop during generation (e.g., 'salt')
 }
 ```
 
@@ -321,6 +348,28 @@ Meal slots are configured in the app's Settings. The defaults for a new account 
 - Hiding a slot does not delete its data — items in hidden slots are preserved and reappear if the slot is made visible again.
 - Deleting a slot is a destructive action: the user is warned that all schedule items in that slot will be deleted.
 - Slot display order can be changed by dragging in the Settings list.
+
+### 3.6 Shopping List Management
+
+- The user generates a shopping list by providing a date range (defaults to the next 7 days).
+- The app computes the required ingredients from all schedule items in that range. Leftover items (`isLeftover: true`) are skipped. Resolves multi-layer servings overrides.
+- **Global Ignore List (The "Salt" problem):** Any ingredient matching an item on the user's `Ignore List` is silently omitted from the generated list. The ignore list comes with sensible defaults (salt, water, olive oil).
+- The user can add any item on the active shopping list to the Ignore List via a submenu action ("Remove and Ignore in future"). This deletes the item from the current list and prevents it from appearing on future ones.
+- After generation, the user can freely add, modify, or remove any items on the list.
+- **Staples Quick-Add:** The user can open a "Staples" drawer/modal to view a checklist of common non-recipe items (milk, eggs, trash bags). Tapping them instantly appends them to the active shopping list.
+
+#### View & Sort Modes
+
+The user can toggle between two primary views for the active shopping list:
+
+1. **Merge Mode (Group by Type/Aisle):** 
+   - This is the optimal view for the grocery store. Same-named ingredients are merged if their canonical units are compatible (`1 stick butter` + `1 lb butter` = `1.25 lb butter`).
+   - If units are incompatible (e.g., `1 can` and `1 cup`), they are listed as separate line items but grouped under the same ingredient name ("Beans").
+   - Merged items display a subtext layer showing exactly which recipes contributed to the total (e.g., *“3 total: 2 from Chili, 1 from Tacos”*).
+2. **Recipe Mode (Group by Recipe):**
+   - This view is for auditing and meal context. Ingredients are strictly grouped under the recipe they belong to.
+   - Ingredients with the same name are *not* merged in this mode.
+   - Manually added items and Staples appear in an "Other" or "Manually Added" section at the bottom.
 
 ---
 
