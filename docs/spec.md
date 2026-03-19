@@ -4,7 +4,7 @@
 - [x] spec for shopping list, staples
 - [x] ability to extend leftovers to future days
 - [ ] quick create recipes
-- [ ] quick group meals
+- [x] quick group meals
 - [ ] home page, more mobile UX specifications
 
 # Meal Planner App Specification
@@ -52,6 +52,8 @@ Recipe {
   sourceImage?: string,
   sourceUrl?: string,
   notes?: string,
+  createdAt: Date,
+  updatedAt: Date,
 }
 ```
 
@@ -91,6 +93,8 @@ Meal {
   name: string,
   recipeIds?: string[],
   ingredients?: Ingredient[], // Simple add-ons that don't have a full recipe
+  createdAt: Date,
+  updatedAt: Date,
 }
 ```
 
@@ -230,59 +234,33 @@ IgnoreItem {
 
 ## 3. Features
 
-### 3.1 Recipe Management
+### 3.1 Library (Recipes & Meals)
 
-- Add, edit, and delete recipes.
-- Recipes have the following fields available for editing:
-  - Name (Required)
-  - Ingredients
-  - Directions
-  - Prep Time
-  - Cook Time
-  - Servings
-  - Tags
-  - Image
-  - Source Image (If imported from an image)
-  - Source URL (If imported from a website)
-  - Notes
-- Ingredients can be added to recipes manually, or by pasting a list of ingredients.
+Recipes (individual items) and Meals (grouped items) exist together as first-class citizens in a unified **Library**. 
 
-#### Importing Recipes
-- User can import recipes from websites. (using a web scraper or LLM to parse the website content)
-- User can import recipes from images using an LLM. (ex. OpenRouter + Gemini 2.5 Flash)
-- The source photo and URL are stored with the recipe and can be viewed by the user.
-- User can import recipes from a CSV file. (parsed by LLM)
-- User can import recipes by pasting a plaintext recipe. (parsed by LLM)
-- If the imput source is lacking information, the user is warned and given the option to edit the recipe.
-- User can edit fields of imported recipes.
+- The Library displays both Recipes and Meals in the same primary grid or list.
+- **Visuals:** Meal cards have a distinct treatment (e.g. a stylized stack of images or a "Meal" badge) so users can distinguish grouped entities from standalone recipes at a glance.
+- **Filtering:** A simple top-level toggle allows users to view `[ All ]`, `[ Recipes ]`, or `[ Meals ]`.
+- Users can search by name or ingredient, filter by tags, and sort by date added. Sorting by "last scheduled" or "most frequently scheduled" is dynamically computed from schedule history.
+- The primary **(+) Add** button provides a dropdown:
+  - Add Recipe (Import via URL, Image, plain text, CSV, or manual entry)
+  - Create Meal
 
-#### Searching and Filtering Recipes
-- User can search for recipes by name or ingredient.
-- User can filter recipes by tags.
-- User can sort recipes by date added, last scheduled, most frequently scheduled, etc.
-- Users can bulk tag recipes.
-- Recipes are paginated as needed.
+#### Recipe Details & Actions
+- Recipes contain fields for: Name, Ingredients, Directions, Prep/Cook time, Servings, Tags, Notes, and original Import Data (Source Image, URL).
+- **Importing:** Users can import recipes via URL (web scraper/LLM), Image (LLM vision), CSV, or pasted plaintext. The source photo and URL are stored. If an import lacks info, the user is warned and given the option to edit.
+- Recipes can be viewed in a list or a focused "Prepare Mode" (step-by-step checklist, with side-by-side panes on wide screens).
+- User can push a recipe's ingredients directly to the active shopping list (if no active list exists, it prompts the user to create one).
 
-#### Viewing Recipes
-- User can view a recipe in a modal.
-- User can view a recipe in a list view.
-- User can see "prepare" mode of a recipe, which shows the ingredients and directions in a step-by-step format.
-  - In prepare mode, the user can check off ingredients and directions as they are completed.
-  - In prepare mode, if the screen is wide enough, user can see recipes and direction side-by-side in separate scrollable panes.
-- User can scale the servings of a recipe.
-- User can add a recipe directly to the shopping list.
-- User can see when the recipe was last scheduled, and how many times it has been scheduled.
+#### Meal Details & Actions
+- Meals contain a Name, referenced Recipes, and optional simple Add-on Ingredients (e.g. buns, cheese).
+- Like recipes, user can see when a meal was last scheduled and its frequency, computed from schedule history.
 
-
-### 3.2 Meal Management
-
-- User can add, edit, and delete meals.
-- Meals have the following fields available for editing:
-  - Name (Required)
-  - Recipes
-  - Add-on ingredients
-- User can add meals to the schedule.
-- User can see when the meal was last scheduled, and how many times it has been scheduled.
+#### Quick Group Meals
+Creating a Meal from existing recipes must be incredibly fast. The app supports three "Quick Group" flows:
+1. **Library Multi-select:** User long-presses or checks multiple recipes in the Library, then taps a "Group into Meal" action. A prompt asks for a Name, and the Meal is instantly created.
+2. **From Recipe View:** While looking at a recipe, the user taps "Add to a Meal" and can either pick an existing Meal or type a new name to instantly create one.
+3. **From Calendar (Plan Mode):** If the user has scheduled multiple recipes and add-on ingredients in a single slot (e.g. Spaghetti and Garlic Bread on Tuesday Dinner), they can select that slot and tap "Save as Meal" to add that combination directly to their Library.
 
 ### 3.3 Rotation Management
 
@@ -292,7 +270,7 @@ IgnoreItem {
   - A target frequency in days (e.g. 7 = weekly, 14 = every two weeks, 30 = monthly)
 - The user can add meals or recipes to the rotation directly from the recipe/meal detail view.
 - The user can see the **What's Next** panel for the active rotation — entries sorted by urgency score — as a preview of what the app would suggest next.
-- Deleting a past schedule entry for a rotation meal resets its `lastScheduledAt`, causing it to rise back toward the top of the What's Next panel.
+- Deleting a past schedule entry for a rotation meal recalculates its urgency score from the remaining history, causing it to correctly rise back toward the top of the What's Next panel.
 
 ### 3.4 Schedule Management
 
@@ -359,7 +337,7 @@ Meal slots are configured in the app's Settings. The defaults for a new account 
 - Generating a new shopping list presents two choices: **Start Fresh** (which deletes the current active list after confirmation and generates a new one) or **Cancel**.
 - The active shopping list **does not sync** with the schedule. If the schedule changes, the user must regenerate the list.
 - When generating, the app computes the required ingredients from all schedule items in the range (including both recipes and direct meal add-ons). Leftover items are skipped. Resolves multi-layer servings overrides.
-- **Global Ignore List:** Any ingredient matching an item on the user's `Ignore List` is silently omitted from the generated list. The ignore list comes with sensible defaults (salt, water, olive oil).
+- **Global Ignore List:** Any ingredient matching an item on the user's `Ignore List` via **exact name match** (ignoring case) is silently omitted from the generated list. The ignore list comes with sensible defaults (salt, water, olive oil).
 - The user can add any item on the active shopping list to the Ignore List via a submenu action ("Remove and Ignore in future").
 - **Manual Edits & Provenance:** Generated items retain their source metadata. If the user only checks off or deletes an item, it stays a generated row. If they materially change the quantity, unit, or name, the item becomes a plain manual row (`isGenerated: false`).
 - **Staples Quick-Add:** The user can open a "Staples" drawer to quickly append common non-recipe items.
@@ -371,7 +349,7 @@ The user can toggle between two primary views for the active shopping list:
 1. **Grouped by Ingredient:** 
    - Same-named ingredients are merged only when their canonical units are identical or safely compatible.
    - If units are incompatible, they remain as separate line items under the same ingredient heading.
-   - Merged items display a subtext layer showing exactly which recipes/meals contributed to the total.
+   - Merged items display a subtext layer showing exactly which recipes/meals contributed to the total. The UI resolves contributor names dynamically via relational lookup to the referenced `sourceRecipeId` or `sourceMealId`.
 2. **Recipe Mode (Group by Recipe):**
    - This view is for auditing and meal context. Ingredients are strictly grouped under the recipe or meal they belong to.
    - Ingredients with the same name are *not* merged in this mode.
@@ -414,7 +392,7 @@ The following prompt is used when parsing ingredients from any source:
 
 ```
 Parse the following ingredient list and return a JSON array. Each element should have:
-- "name": the ingredient name, lowercase, singular (e.g. "egg", "garlic clove" → "garlic")
+- "name": the ingredient name, lowercase, singular. Do not over-normalize distinct grocery items (e.g. "red onions" → "red onion", but keep modifiers like "kosher salt" distinct from "salt").
 - "quantity": a numeric value, or null if not applicable
 - "unit": one of the following canonical units only:
     ml, tsp, tbsp, cup, fl oz, l,
