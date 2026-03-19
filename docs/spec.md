@@ -249,6 +249,7 @@ Recipes (individual items) and Meals (grouped items) exist together as first-cla
 #### Recipe Details & Actions
 - Recipes contain fields for: Name, Ingredients, Directions, Prep/Cook time, Servings, Tags, Notes, and original Import Data (Source Image, URL).
 - **Importing:** Users can import recipes via URL (web scraper/LLM), Image (LLM vision), CSV, or pasted plaintext. The source photo and URL are stored. If an import lacks info, the user is warned and given the option to edit.
+- **Browser Extension:** A companion browser extension allows users to easily capture and add recipes directly from other websites into their library.
 - **Quick Create (Stubbing):** If the user is searching for a recipe to add to a meal or the schedule and it doesn't exist, they can tap "Create [Name]" to instantly stub out an empty Recipe with just that name and fill in the details later. 
 - Recipes can be viewed in a list or a focused "Prepare Mode" (step-by-step checklist, with side-by-side panes on wide screens).
 - User can push a recipe's ingredients directly to the active shopping list (if no active list exists, it prompts the user to create one).
@@ -385,6 +386,9 @@ The Shopping List is optimized for one-handed use while pushing a grocery cart:
 - **Aisle Mode Default:** Opens directly to "Grouped by Ingredient" for efficient shopping.
 - **Large Touch Targets:** Oversized checkboxes ensure easy tapping while moving.
 - **Swipe Actions:** Swiping left on an item reveals actions, including "Delete" and a "Hide & Ignore" button (which adds it to the Global Ignore List).
+
+#### 5. Native Share Extension
+To easily import recipes on the go, the mobile app registers as a native share target. Users can "share" a recipe URL or text from their mobile browser or other apps directly to this app to easily import it.
 
 ---
 
