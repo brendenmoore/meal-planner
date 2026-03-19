@@ -3,7 +3,7 @@
 - [x] support for lunch/dinner/etc on schedule/rotation (dinner rotation should not overwrite conflict with lunches)
 - [x] spec for shopping list, staples
 - [x] ability to extend leftovers to future days
-- [ ] quick create recipes
+- [x] quick create recipes
 - [x] quick group meals
 - [ ] home page, more mobile UX specifications
 
@@ -249,6 +249,7 @@ Recipes (individual items) and Meals (grouped items) exist together as first-cla
 #### Recipe Details & Actions
 - Recipes contain fields for: Name, Ingredients, Directions, Prep/Cook time, Servings, Tags, Notes, and original Import Data (Source Image, URL).
 - **Importing:** Users can import recipes via URL (web scraper/LLM), Image (LLM vision), CSV, or pasted plaintext. The source photo and URL are stored. If an import lacks info, the user is warned and given the option to edit.
+- **Quick Create (Stubbing):** If the user is searching for a recipe to add to a meal or the schedule and it doesn't exist, they can tap "Create [Name]" to instantly stub out an empty Recipe with just that name and fill in the details later. 
 - Recipes can be viewed in a list or a focused "Prepare Mode" (step-by-step checklist, with side-by-side panes on wide screens).
 - User can push a recipe's ingredients directly to the active shopping list (if no active list exists, it prompts the user to create one).
 
@@ -280,6 +281,7 @@ Creating a Meal from existing recipes must be incredibly fast. The app supports 
 - User can click on any day to open a modal to add, edit, or delete schedule entries for that day.
 - Recipes and meals can be dragged and dropped to different days and to different slots within a day.
 - Dragging an item from a past calendar date to a future date reschedules it without re-entering it.
+- **Quick Create Recipes:** If the user searches for a meal/recipe that doesn't exist, they can instantly hit "Create 'name'" to stub out an empty recipe in the Library and place it straight onto the schedule.
 - The user can also add **quick-add** items to any slot — freeform labels like "Takeout" or "Eat out" that appear on the calendar but contribute nothing to the shopping list.
 - Meals can be set on a recurring schedule per slot (e.g. the same lunch every weekday in the Lunch slot). When the month changes, recurring meals are automatically added for the new month.
 
