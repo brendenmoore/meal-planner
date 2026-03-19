@@ -46,7 +46,7 @@ This document outlines the UI screens, their constituent components, key interac
 **Description:** Sticky sidebar showing the rotation queue sorted by urgency.
 **Interactions:** Drag items to the calendar.
 **Prompt:**
-> "A sleek sidebar component titled 'What's Next'. It contains a vertically scrollable list of meal suggestion cards. Each card shows the meal name, primary tags, and a subtle urgency indicator (e.g., a small red dot or 'Overdue' text). The cards should look draggable."
+> "A sleek sidebar component titled 'What's Next'. It contains a vertically scrollable list of meal suggestion cards. Each card shows the meal name and primary tags. The cards should look draggable."
 
 ### Component: Search/Suggest Modal
 **Description:** Opens when a user clicks a calendar slot.
