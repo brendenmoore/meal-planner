@@ -16,6 +16,24 @@ This document outlines the UI screens, their constituent components, key interac
 **Prompt:**
 > "A cohesive React component for a Recipe Card. It features a hero image, a title, prep/cook time metadata, and tags at the bottom. The component should also support a 'Meal' variant which visually stacks multiple images behind the primary one to indicate a grouped meal. Include a subtle checkbox in the top corner for multi-selection."
 
+### Component: Primary Add Interaction Dropdown
+**Description:** The dropdown menu that appears when clicking the main (+) Add button.
+**Interactions:** Select import method or meal creation.
+**Prompt:**
+> "A polished popover menu triggered by a floating action button. The menu lists several options with icons: 'Import via URL', 'Upload Image', 'Paste Text/CSV', 'Manual Recipe Entry', and 'Create New Meal'."
+
+### Screen: Recipe Editor Form (Add/Edit)
+**Description:** The full form to manually edit or review parsed recipe data.
+**Interactions:** Edit arrays of ingredients/directions, fix warnings on unmapped units.
+**Prompt:**
+> "A comprehensive form UI for editing a recipe. The top has inputs for Name, Prep Time, Cook Time, Servings, and Tags. Below are two main sections: Ingredients and Directions, each allowing the user to add, reorder, or delete rows. Include a prominent warning banner at the top that says 'Some imported ingredients need your review' and highlight specific ingredient rows in yellow where the 'unit' could not be parsed."
+
+### Screen: Meal Editor / Builder Form
+**Description:** Interface to construct a meal from recipes and add-on ingredients.
+**Interactions:** Search and select recipes to attach, add simple text ingredients.
+**Prompt:**
+> "A clean form UI for creating a grouped Meal. It has a large text input for the Meal Name at the top. Below is a grid/list of currently attached Recipe cards with 'Remove' buttons. Below that is an autocomplete search input to 'Find and attach recipes'. Finally, a section at the bottom to 'Add simple ingredients (e.g., buns, cheese)' with a simple text input and list."
+
 ---
 
 ## 2. Recipe & Meal Details
@@ -54,6 +72,17 @@ This document outlines the UI screens, their constituent components, key interac
 **Prompt:**
 > "A command-palette style search modal for adding a meal to a calendar slot. At the top is a large text input field. Below it, a 'Top Suggestions' section shows 3-4 highly recommended meals. Below that, a list of search results. If the search is empty, show two persistent action buttons at the bottom: 'Quick Create Recipe' and 'Add Custom Label'."
 
+### Component: Leftover Extension Context Menu
+**Description:** Context menu for schedule items to handle leftovers.
+**Interactions:** Right-click schedule item to select leftover extension.
+**Prompt:**
+> "A sleek context menu (right-click menu) positioned over a calendar item. The menu options include 'Edit', 'Reschedule', 'Extend as leftovers', and 'Delete'. If 'Extend as leftovers' is hovered, show a small submenu or inline input asking 'How many additional days?' with number steppers."
+
+### Screen: Recurring Meal Setup Modal
+**Description:** Modal to configure a meal to repeat on specific days.
+**Prompt:**
+> "A small modal dialog titled 'Set Recurring Schedule'. It contains a dropdown to select the Target Meal Slot (e.g., 'Lunch'), and a row of seven circular buttons representing the days of the week for the user to toggle which days the meal repeats. Includes 'Save' and 'Cancel' buttons."
+
 ---
 
 ## 4. Mobile Experience
@@ -90,6 +119,18 @@ This document outlines the UI screens, their constituent components, key interac
 **Prompt:**
 > "A persistent bottom bar or drawer handle for a mobile app titled 'Add Staples'. When expanded, it shows a dense grid of pill-shaped buttons for common household items (e.g., Milk, Eggs, Paper Towels, Bread) that a user can rapidly tap to add to their shopping list."
 
+### Screen: Desktop Shopping List View
+**Description:** A wide-screen optimized version of the shopping list showing more context.
+**Interactions:** View grouped ingredients and Recipe mode concurrently or detailed side-panels.
+**Prompt:**
+> "A desktop-optimized UI for a grocery shopping list. The layout features a sidebar on the left showing a summary of the date range, the active schedule items contributing to the list, and a prominent 'Regenerate List' button. The main right area displays the actual shopping list, structured into logical grocery store categories, with clear typography showing merged quantities."
+
+### Component: Shopping List Generator Modal
+**Description:** The prompt before wiping the active list and generating a newly scoped one.
+**Interactions:** Pick date range, finalize/cancel.
+**Prompt:**
+> "A confirmation modal for generating a new shopping list. The title reads 'Generate New List'. It contains a date range picker component to select the schedule span. Below that is a warning text explaining that this will 'Start Fresh' and discard the current active list and manual additions. Actions: 'Cancel' and 'Generate List'."
+
 ---
 
 ## 6. Settings & General
@@ -104,3 +145,15 @@ This document outlines the UI screens, their constituent components, key interac
 **Description:** Companion pieces for integrating outside workflows.
 **Prompt:**
 > "A compact browser extension UI popup for a meal planner app. The extension displays the metadata and image scraped from the current recipe webpage. It includes a button that says 'Save Recipe to Library' and another button that says 'Open in Meal Planner'."
+
+### Screen: Rotation Manager
+**Description:** Manage the frequency pool of meals/recipes.
+**Interactions:** Create/rename rotations, add/remove items, adjust target frequency.
+**Prompt:**
+> "A settings dashboard UI for managing 'Meal Rotations'. The screen displays a table of recipes and meals currently in the rotation. Each row shows the item name, an adjustable number input for 'Target Frequency (Days)', and an optional 'Servings Override' input. There is an 'Add to Rotation' search bar at the top."
+
+### Screen: Global Ignore List
+**Description:** Manage strictly ignored ingredients.
+**Interactions:** View, add, delete default or custom ignored items.
+**Prompt:**
+> "A simple settings page UI for a 'Global Ignore List'. The screen shows a text input at the top to 'Add new ignored ingredient'. Below is a flex-wrap container of pill-shaped tags representing ignored items (e.g., 'salt', 'water', 'olive oil'), each with a small 'x' button to remove them."
