@@ -32,6 +32,55 @@ So the basic user flow is:
 6. User generates a shopping list from the schedule.
 7. User can add/remove additional items to the shopping list. (optional)
 
+### 1.1 Product Boundaries (v1)
+
+The v1 product is a **web-first household meal planner**. The primary client is a responsive web app, with mobile support delivered through a mobile-friendly web experience/PWA rather than a native mobile app.
+
+Explicit v1 scope decisions:
+- Single household workspace per account
+- Responsive web app / PWA
+- Async recipe import via URL, image, pasted text, and manual entry
+- Server-backed sync with local caching for key mobile flows
+
+Explicitly out of scope for v1:
+- Native mobile app
+- Native mobile share extension
+- Browser extension
+- CSV import
+- Advanced collaborative conflict resolution beyond simple merge rules
+
+### 1.2 Identity, Tenancy, and Permissions
+
+The top-level tenancy boundary is the **household**. All durable entities belong to exactly one household, including recipes, meals, rotations, schedule items, shopping lists, leftovers, settings, and imported assets.
+
+For v1:
+- A household is represented by a single account/workspace.
+- Multi-user invitations and role-based permissions are deferred.
+- Anyone with access to the household can edit all household data.
+- Row-level isolation between households is mandatory.
+
+### 1.3 Offline, Sync, and Time Rules
+
+The app is designed for intermittent connectivity, especially on mobile, but v1 does not attempt full offline-first editing across every feature.
+
+Offline behavior in v1:
+- Cached read access for the active shopping list
+- Cached read access for prepare mode
+- Cached read access for recent schedule data
+- Best-effort local interaction for shopping list checking and simple item updates, to be synced when connectivity returns
+
+Sync and conflict rules in v1:
+- The server is the source of truth for durable state.
+- Standard entity edits use last-write-wins at the field or row level.
+- Shopping list interactions operate at the item level so checking one item does not overwrite unrelated edits to another.
+- Generated shopping lists are disposable snapshots and may be regenerated rather than deeply merged.
+
+Timezone and date rules:
+- Timestamps are stored in UTC.
+- Schedule dates are stored as household-local calendar dates.
+- Dates are rendered using the user's current local timezone, but recurrence evaluation follows the household timezone.
+- Recurring meals remain anchored to the household timezone even if a user temporarily travels to another timezone.
+
 ## 2. Data Model
 
 ### 2.1 Recipe
@@ -243,13 +292,15 @@ Recipes (individual items) and Meals (grouped items) exist together as first-cla
 - **Filtering:** A simple top-level toggle allows users to view `[ All ]`, `[ Recipes ]`, or `[ Meals ]`.
 - Users can search by name or ingredient, filter by tags, and sort by date added. Sorting by "last scheduled" or "most frequently scheduled" is dynamically computed from schedule history.
 - The primary **(+) Add** button provides a dropdown:
-  - Add Recipe (Import via URL, Image, plain text, CSV, or manual entry)
+  - Add Recipe (Import via URL, Image, plain text, or manual entry)
   - Create Meal
 
 #### Recipe Details & Actions
 - Recipes contain fields for: Name, Ingredients, Directions, Prep/Cook time, Servings, Tags, Notes, and original Import Data (Source Image, URL).
-- **Importing:** Users can import recipes via URL (web scraper/LLM), Image (LLM vision), CSV, or pasted plaintext. The source photo and URL are stored. If an import lacks info, the user is warned and given the option to edit.
-- **Browser Extension:** A companion browser extension allows users to easily capture and add recipes directly from other websites into their library.
+- **Importing:** v1 supports imports via URL (web scraper/LLM), image (LLM vision), pasted plaintext, or manual entry. The source photo and URL are stored when available. Imports run asynchronously and are retry-safe where possible.
+- **Import failure handling:** If extraction is incomplete, the app creates a draft recipe populated with the fields it could confidently extract and clearly flags missing or low-confidence fields for user review.
+- **Import privacy:** Imported text, URLs, and images may be sent to a model provider only as needed for extraction/parsing. Parsing prompts remain server-side. Imported user content must not be used for model training when provider settings allow disabling that usage.
+- **Browser Extension:** A companion browser extension is a possible future enhancement, but is explicitly out of scope for v1.
 - **Quick Create (Stubbing):** If the user is searching for a recipe to add to a meal or the schedule and it doesn't exist, they can tap "Create [Name]" to instantly stub out an empty Recipe with just that name and fill in the details later. 
 - Recipes can be viewed in a list or a focused "Prepare Mode" (step-by-step checklist, with side-by-side panes on wide screens).
 - User can push a recipe's ingredients directly to the active shopping list (if no active list exists, it prompts the user to create one).
@@ -282,9 +333,11 @@ Creating a Meal from existing recipes must be incredibly fast. The app supports 
 - **Adding to a Slot:** Clicking on any slot opens a unified Search/Suggest modal.
   - The modal features a search input field. Below it, top suggestions are shown immediately: the highest priority items from the active rotation, followed by common quick-options (e.g. "Eat out").
   - As the user types, the list filters to matching meals and recipes from the Library.
+  - v1 search indexes recipe names, meal names, tags, and normalized ingredient names. Name search should support fuzzy matching; ingredient search may begin as exact or prefix matching.
   - If there are no matches, the user is given two options: **Quick Create** a new recipe (which stubs out an empty recipe in the Library) or create a **Quick-Add** label (a freeform text entry that contributes nothing to the shopping list).
 - Recipes and meals can be dragged and dropped to different days and to different slots within a day.
 - Meals can be set on a recurring schedule per slot (e.g. the same lunch every weekday in the Lunch slot). When the month changes, recurring meals are automatically added for the new month.
+- Recurring schedules are evaluated in the household timezone. Rendering may reflect the viewer's local timezone, but the recurrence rule itself does not shift with travel.
 
 #### Meal Slot Behavior on the Calendar
 
@@ -309,6 +362,8 @@ Leftovers allow a meal to span multiple days without duplicating shopping list i
 - Editing the original item (servings, label) propagates to all linked leftover items.
 - Deleting the original item also removes all its linked leftovers.
 - Individual leftover days can be deleted independently (e.g. if you ran out of food earlier than expected).
+- Moving the original item to a different day or slot moves its linked leftovers by the same offset when possible, preserving the leftover chain.
+- If a leftover day has been individually deleted, moving the original item does not recreate that deleted leftover automatically.
 
 **Shopping list:** Extending a meal as leftovers does not change shopping list quantities. The original scheduled item is assumed to already represent the full batch needed for all leftover days. If the user needs more food, they manually increase the servings on the original item.
 
@@ -344,6 +399,8 @@ Meal slots are configured in the app's Settings. The defaults for a new account 
 - The user can add any item on the active shopping list to the Ignore List via a submenu action ("Remove and Ignore in future").
 - **Manual Edits & Provenance:** Generated items retain their source metadata. If the user only checks off or deletes an item, it stays a generated row. If they materially change the quantity, unit, or name, the item becomes a plain manual row (`isGenerated: false`).
 - **Staples Quick-Add:** The user can open a "Staples" drawer to quickly append common non-recipe items.
+- **Regeneration rule:** Regenerating the active shopping list replaces all generated rows for the selected range and preserves manual rows, including Staples and user-created additions. Manual edits made by converting a generated row into a manual row are preserved because they are now plain manual rows.
+- **Merge safety rule:** Ingredient rows are merged only when the normalized ingredient name matches and the units are identical or safely convertible. Distinct ingredient variants such as `onion` and `red onion` do not auto-merge. Packaging-based items such as `1 can tomato` and `14 oz tomato` remain separate unless a deterministic conversion rule exists.
 
 #### View & Sort Modes
 
@@ -388,15 +445,63 @@ The Shopping List is optimized for one-handed use while pushing a grocery cart:
 - **Swipe Actions:** Swiping left on an item reveals actions, including "Delete" and a "Hide & Ignore" button (which adds it to the Global Ignore List).
 
 #### 5. Native Share Extension
-To easily import recipes on the go, the mobile app registers as a native share target. Users can "share" a recipe URL or text from their mobile browser or other apps directly to this app to easily import it.
+To easily import recipes on the go, a future native app could register as a native share target. This is explicitly out of scope for v1; the v1 mobile experience relies on the responsive web app/PWA and manual URL/text/image import flows.
 
 ---
+
+## 4. Nonfunctional Requirements
+
+### 4.1 Performance
+
+- Common calendar interactions in month view should feel effectively instant, targeting under 200 ms for common client-side interactions after data is loaded.
+- Shopping list generation for a normal household dataset should complete in under 1 second in typical conditions.
+- Search should return initial results quickly enough to support typeahead interaction in the add-to-slot flow.
+
+### 4.2 Reliability and Availability
+
+- Imports should be idempotent where possible and safe to retry.
+- Background jobs must expose visible states such as queued, processing, completed, and failed.
+- The active shopping list and prepare mode should be cached locally for poor-connectivity use cases.
+- Recent schedule reads should remain available from local cache when offline.
+
+### 4.3 Data Integrity
+
+- The relational data model must enforce household ownership and referential integrity across recipes, meals, schedule items, leftovers, shopping list provenance, and imported assets.
+- Derived behaviors such as rotation urgency ranking and shopping-list generation must be deterministic from persisted source data and documented rules.
+- Leftover relationships must be auditable through explicit provenance links rather than implicit inference.
+
+### 4.4 Security and Privacy
+
+- Authentication is required for all household data access.
+- Household data must be isolated at the row level.
+- File storage must use secure object storage with signed upload/download flows where appropriate.
+- Secrets, model API keys, and scraping credentials must remain server-side.
+- AI-backed import endpoints must be rate-limited and quota-controlled to reduce abuse and cost risk.
+- The product must provide a basic privacy policy and a path for account data export and deletion if multi-user sharing is introduced later.
+
+### 4.5 Observability and Maintainability
+
+- The system should include error tracking, structured logs, and tracing/visibility for background jobs and import pipelines.
+- Product analytics should capture import attempts, import success/failure, and key planning/shopping funnel events.
+- Domain boundaries should remain explicit: library, planning, rotation, shopping, and import.
+- Validation schemas should be shared across client and server wherever practical.
+
+### 4.6 Accessibility
+
+- The desktop calendar must support keyboard navigation.
+- Shopping list and prepare mode must have screen-reader-friendly semantics.
+- Slot colors must maintain sufficient contrast and must not be the only indicator of meaning.
+
+### 4.7 Cost Control
+
+- AI-assisted import is the primary variable-cost risk and must be asynchronous, rate-limited, and quota-controlled.
+- The product should prefer deterministic parsing and relational queries where sufficient, and avoid adding dedicated search or OCR infrastructure in v1 unless required by observed usage.
 
 ## Appendix
 
 ### A. Ingredient Parsing
 
-Ingredient parsing is a critical subsystem that affects the quality of the shopping list. All import methods (URL, image, CSV, plaintext) pass ingredients through the same LLM parsing step to produce a consistent internal schema.
+Ingredient parsing is a critical subsystem that affects the quality of the shopping list. All supported import methods in v1 (URL, image, plaintext) pass ingredients through the same LLM parsing step to produce a consistent internal schema.
 
 #### Canonical Unit List (`CanonicalUnit`)
 
