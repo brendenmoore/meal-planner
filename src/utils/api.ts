@@ -26,8 +26,9 @@ function stripTrailingSlash(origin: string): string {
   return origin.replace(/\/+$/, "");
 }
 
-// Token retrieval (Supabase browser session) lands in #4; until then callers
-// pass the token explicitly, or omit it and behave exactly like fetch.
+// Token retrieval lives in ./mobile-auth (getAccessToken / apiFetchWithAuth):
+// callers needing a session token use apiFetchWithAuth, or pass the token
+// explicitly via opts.accessToken.
 export function apiFetch(
   path: string,
   init?: RequestInit,

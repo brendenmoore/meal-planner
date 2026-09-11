@@ -7,10 +7,9 @@ import { createClient } from "@/utils/supabase/server";
 import { isMobileBuild } from "@/utils/mobile-build";
 
 // Static shell for the mobile (static-export) build, where cookies() and
-// other request-only APIs are unavailable at prerender time. The follow-up
-// auth ticket adds a client-side guard that resolves the session at runtime;
-// until then the bundle prerenders the public landing markup. The web path
-// below is unchanged.
+// other request-only APIs are unavailable at prerender time. The client-side
+// guard (MobileAuthGuard) resolves the session at runtime; until then the
+// bundle prerenders the public landing markup. The web path below is unchanged.
 function LandingView() {
   return (
       <div className={styles.landing}>

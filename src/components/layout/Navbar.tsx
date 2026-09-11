@@ -53,8 +53,8 @@ function NavbarView({ isAuthed }: { isAuthed: boolean }) {
 
 export default async function Navbar() {
   // Mobile static-export build: no request cookies at prerender time, so
-  // prerender the public shell. The follow-up auth ticket adds a client-side
-  // guard that resolves the session at runtime. Web path below is unchanged.
+  // prerender the public shell. The client-side guard (MobileAuthGuard)
+  // resolves the session at runtime. Web path below is unchanged.
   if (isMobileBuild()) {
     return <NavbarView isAuthed={false} />;
   }

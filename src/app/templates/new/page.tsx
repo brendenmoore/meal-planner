@@ -25,7 +25,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
-import { apiFetch } from "@/utils/api";
+import { apiFetchWithAuth } from "@/utils/mobile-auth";
 import styles from "./page.module.css";
 
 type MealPlan = {
@@ -116,7 +116,7 @@ function NewTemplateForm() {
       setIsLoading(true);
       setError(null);
 
-      const res = await apiFetch("/api/meal-plans");
+      const res = await apiFetchWithAuth("/api/meal-plans");
       if (res.status === 401) {
         router.push("/login");
         return;
@@ -145,7 +145,7 @@ function NewTemplateForm() {
     let mounted = true;
 
     const loadTemplate = async () => {
-      const res = await apiFetch(`/api/templates/${templateId}`);
+      const res = await apiFetchWithAuth(`/api/templates/${templateId}`);
       if (res.status === 401) {
         router.push("/login");
         return;
@@ -230,7 +230,7 @@ function NewTemplateForm() {
     };
 
     try {
-      const res = await fetch(templateId ? `/api/templates/${templateId}` : "/api/templates", {
+      const res = await apiFetchWithAuth(templateId ? `/api/templates/${templateId}` : "/api/templates", {
         method: templateId ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

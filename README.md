@@ -30,13 +30,16 @@ Notes:
   The flag is bridged into the bundle as `NEXT_PUBLIC_MOBILE_BUILD` because
   client code only inlines `NEXT_PUBLIC_*` vars; app code reads both via
   `isMobileBuild()`.
-- Content screens call the API through `apiFetch()` (`src/utils/api.ts`):
-  relative paths with the cookie session on web, absolute prod origin
-  (`https://meals.bmoore.dev`, overridable via `NEXT_PUBLIC_API_BASE_URL`)
-  with a `Bearer` token in the mobile bundle. Unit tests: `npm run test:unit`.
+- Content screens call the API through `apiFetchWithAuth()` (`src/utils/mobile-auth.ts`,
+  built on `apiFetch()` in `src/utils/api.ts`): relative paths with the cookie
+  session on web, absolute prod origin (`https://meals.bmoore.dev`, overridable
+  via `NEXT_PUBLIC_API_BASE_URL`) with a `Bearer` token from the Supabase
+  browser session in the mobile bundle. Unit tests: `npm run test:unit`.
 - The mobile bundle prerenders the public landing shell for server-authenticated
-  surfaces (`/` and the navbar); the client-side auth guard arrives in a
-  follow-up ticket and the web SSR path is unchanged.
+  surfaces (`/` and the navbar); `MobileAuthGuard`
+  (`src/components/auth/MobileAuthGuard.tsx`) resolves the session at runtime —
+  logged-out deep routes redirect to login with `?redirect=` preserved — and
+  the web SSR path is unchanged.
 
 ---
 

@@ -7,7 +7,7 @@ import { ArrowLeft, Camera, Plus, Trash2, Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
-import { apiFetch } from "@/utils/api";
+import { apiFetchWithAuth } from "@/utils/mobile-auth";
 import styles from "./page.module.css";
 
 export default function AddRecipePage() {
@@ -50,7 +50,7 @@ export default function AddRecipePage() {
       const base64Image = await base64Promise;
 
       // Call API
-      const res = await apiFetch('/api/extract-recipe', {
+      const res = await apiFetchWithAuth('/api/extract-recipe', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -102,7 +102,7 @@ export default function AddRecipePage() {
       .filter((ing) => ing.name || ing.amount);
 
     try {
-      const res = await apiFetch("/api/recipes", {
+      const res = await apiFetchWithAuth("/api/recipes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
