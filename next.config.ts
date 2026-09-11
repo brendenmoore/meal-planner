@@ -22,6 +22,10 @@ const nextConfig: NextConfig = {
         // Every page/layout in src/app is .tsx; every .ts file is an API
         // route, so narrowing extensions excludes exactly the API routes.
         pageExtensions: ["tsx"],
+        // Client bundles only inline NEXT_PUBLIC_* vars, so bridge the build
+        // flag into the bundle: isMobileBuild() reads the public var at
+        // runtime in the browser and MOBILE_BUILD on the server.
+        env: { NEXT_PUBLIC_MOBILE_BUILD: "1" },
       }
     : {}),
 };

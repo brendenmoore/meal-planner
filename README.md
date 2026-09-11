@@ -21,9 +21,19 @@ npm run verify:build-matrix # assert artifact shape of both builds
 Notes:
 
 - Build scripts assume a POSIX shell (`sh`/`zsh`); on Windows use WSL or Git Bash.
+- Each build script wipes its own output dir first (`.next/` for web, `out/`
+  for mobile). Note the mobile export also refreshes manifests inside `.next/`,
+  so always run `build:web` again before `npm run start` after a mobile build.
 - `build:mobile` sets `MOBILE_BUILD=1`, which switches `next.config.ts` to
   `output: "export"` with unoptimized images and excludes `src/app/api`
   route handlers (the mobile bundle calls the hosted prod origin instead).
+  The flag is bridged into the bundle as `NEXT_PUBLIC_MOBILE_BUILD` because
+  client code only inlines `NEXT_PUBLIC_*` vars; app code reads both via
+  `isMobileBuild()`.
+- Content screens call the API through `apiFetch()` (`src/utils/api.ts`):
+  relative paths with the cookie session on web, absolute prod origin
+  (`https://meals.bmoore.dev`, overridable via `NEXT_PUBLIC_API_BASE_URL`)
+  with a `Bearer` token in the mobile bundle. Unit tests: `npm run test:unit`.
 - The mobile bundle prerenders the public landing shell for server-authenticated
   surfaces (`/` and the navbar); the client-side auth guard arrives in a
   follow-up ticket and the web SSR path is unchanged.
