@@ -25,6 +25,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
+import { apiFetch } from "@/utils/api";
 import styles from "./page.module.css";
 
 type MealPlan = {
@@ -115,7 +116,7 @@ function NewTemplateForm() {
       setIsLoading(true);
       setError(null);
 
-      const res = await fetch("/api/meal-plans");
+      const res = await apiFetch("/api/meal-plans");
       if (res.status === 401) {
         router.push("/login");
         return;
@@ -144,7 +145,7 @@ function NewTemplateForm() {
     let mounted = true;
 
     const loadTemplate = async () => {
-      const res = await fetch(`/api/templates/${templateId}`);
+      const res = await apiFetch(`/api/templates/${templateId}`);
       if (res.status === 401) {
         router.push("/login");
         return;

@@ -5,9 +5,11 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:web": "next build",
-    "build:mobile": "MOBILE_BUILD=1 next build",
+    "build:web": "rm -rf .next && next build",
+    "build:mobile": "rm -rf out && MOBILE_BUILD=1 next build",
     "verify:build-matrix": "node scripts/verify-build-matrix.mjs",
+    "test:unit": "vitest run",
+    "typecheck": "tsc --noEmit",
     "start": "next start",
     "lint": "eslint"
   },
@@ -30,6 +32,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "playwright": "^1.58.2",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.7"
   }
 }

@@ -7,6 +7,7 @@ import { Plus, Search, Layers, CalendarRange, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
+import { apiFetch } from "@/utils/api";
 import styles from "./page.module.css";
 
 type Template = {
@@ -29,7 +30,7 @@ export default function TemplatesPage() {
       setIsLoading(true);
       setError(null);
 
-      const res = await fetch("/api/templates");
+      const res = await apiFetch("/api/templates");
       if (res.status === 401) {
         router.push("/login");
         return;

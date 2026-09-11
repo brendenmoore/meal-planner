@@ -7,6 +7,7 @@ import { Plus, Search, Filter, Utensils } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
+import { apiFetch } from "@/utils/api";
 import styles from "./page.module.css";
 
 type MealPlan = {
@@ -36,8 +37,8 @@ export default function MealPlansPage() {
       setError(null);
 
       const [planRes, recipeRes] = await Promise.all([
-        fetch("/api/meal-plans"),
-        fetch("/api/recipes"),
+        apiFetch("/api/meal-plans"),
+        apiFetch("/api/recipes"),
       ]);
 
       if (planRes.status === 401 || recipeRes.status === 401) {

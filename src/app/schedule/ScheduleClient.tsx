@@ -34,6 +34,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
+import { apiFetch } from "@/utils/api";
 import styles from "./page.module.css";
 
 type AvailableItem = { id: string; name: string; type: "meal-plan" | "recipe" };
@@ -124,8 +125,8 @@ export default function SchedulePage() {
       setItemsError(null);
 
       const [recipesRes, plansRes] = await Promise.all([
-        fetch("/api/recipes"),
-        fetch("/api/meal-plans"),
+        apiFetch("/api/recipes"),
+        apiFetch("/api/meal-plans"),
       ]);
 
       if (recipesRes.status === 401 || plansRes.status === 401) {
