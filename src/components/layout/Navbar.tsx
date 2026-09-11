@@ -2,15 +2,10 @@ import Link from "next/link";
 import { CalendarDays, ShoppingCart, User, BookOpen } from "lucide-react";
 import styles from "./Navbar.module.css";
 import { createClient } from "@/utils/supabase/server";
+import { isMobileBuild } from "@/utils/mobile-build";
 import { Button } from "@/components/ui/Button";
 
-export default async function Navbar() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const isAuthed = Boolean(user);
-
+function NavbarView({ isAuthed }: { isAuthed: boolean }) {
   return (
     <nav
       className={`glass-panel ${styles.navbar} ${!isAuthed ? styles.publicNavbar : ""}`}
@@ -54,4 +49,20 @@ export default async function Navbar() {
       </div>
     </nav>
   );
+}
+
+export default async function Navbar() {
+  // Mobile static-export build: no request cookies at prerender time, so
+  // prerender the public shell. The follow-up auth ticket adds a client-side
+  // guard that resolves the session at runtime. Web path below is unchanged.
+  if (isMobileBuild()) {
+    return <NavbarView isAuthed={false} />;
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  return <NavbarView isAuthed={Boolean(user)} />;
 }

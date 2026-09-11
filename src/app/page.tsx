@@ -4,16 +4,15 @@ import { Button } from "@/components/ui/Button";
 import { Plus, Calendar, BookOpen, ShoppingCart, Sparkles } from "lucide-react";
 import styles from "./page.module.css";
 import { createClient } from "@/utils/supabase/server";
+import { isMobileBuild } from "@/utils/mobile-build";
 
-export default async function Home() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const isAuthed = Boolean(user);
-
-  if (!isAuthed) {
-    return (
+// Static shell for the mobile (static-export) build, where cookies() and
+// other request-only APIs are unavailable at prerender time. The follow-up
+// auth ticket adds a client-side guard that resolves the session at runtime;
+// until then the bundle prerenders the public landing markup. The web path
+// below is unchanged.
+function LandingView() {
+  return (
       <div className={styles.landing}>
         <section className={styles.hero}>
           <div className={styles.heroContent}>
@@ -55,7 +54,22 @@ export default async function Home() {
           </div>
         </section>
       </div>
-    );
+  );
+}
+
+export default async function Home() {
+  if (isMobileBuild()) {
+    return <LandingView />;
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const isAuthed = Boolean(user);
+
+  if (!isAuthed) {
+    return <LandingView />;
   }
 
   return (
