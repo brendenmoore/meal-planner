@@ -5,6 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:web": "next build",
+    "build:mobile": "MOBILE_BUILD=1 next build",
+    "verify:build-matrix": "node scripts/verify-build-matrix.mjs",
     "start": "next start",
     "lint": "eslint"
   },

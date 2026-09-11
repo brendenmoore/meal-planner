@@ -3,10 +3,11 @@ import { createClient } from '@/utils/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
-type Params = { params: { id: string } }
+type Params = { params: Promise<{ id: string }> }
 
 export async function GET(_req: Request, { params }: Params) {
   const supabase = await createClient()
+  const { id } = await params
   const { data: { user }, error: userError } = await supabase.auth.getUser()
 
   if (userError || !user) {
@@ -16,7 +17,7 @@ export async function GET(_req: Request, { params }: Params) {
   const { data, error } = await supabase
     .from('meal_plan_templates')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (error) {
@@ -28,6 +29,7 @@ export async function GET(_req: Request, { params }: Params) {
 
 export async function PATCH(req: Request, { params }: Params) {
   const supabase = await createClient()
+  const { id } = await params
   const { data: { user }, error: userError } = await supabase.auth.getUser()
 
   if (userError || !user) {
@@ -47,7 +49,7 @@ export async function PATCH(req: Request, { params }: Params) {
   const { data, error } = await supabase
     .from('meal_plan_templates')
     .update(updates)
-    .eq('id', params.id)
+    .eq('id', id)
     .select('*')
     .single()
 
@@ -60,6 +62,7 @@ export async function PATCH(req: Request, { params }: Params) {
 
 export async function DELETE(_req: Request, { params }: Params) {
   const supabase = await createClient()
+  const { id } = await params
   const { data: { user }, error: userError } = await supabase.auth.getUser()
 
   if (userError || !user) {
@@ -69,7 +72,7 @@ export async function DELETE(_req: Request, { params }: Params) {
   const { error } = await supabase
     .from('meal_plan_templates')
     .delete()
-    .eq('id', params.id)
+    .eq('id', id)
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })

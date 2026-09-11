@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Save, Search, GripVertical, Plus, Trash2, Loader2 } from "lucide-react";
@@ -87,7 +87,7 @@ function SortablePlanItem({
   );
 }
 
-export default function NewTemplatePage() {
+function NewTemplateForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const templateId = searchParams.get("id");
@@ -368,5 +368,13 @@ export default function NewTemplatePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function NewTemplatePage() {
+  return (
+    <Suspense>
+      <NewTemplateForm />
+    </Suspense>
   );
 }

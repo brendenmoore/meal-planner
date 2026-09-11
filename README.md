@@ -1,3 +1,35 @@
+# Meal Planner
+
+## Build matrix (web + mobile)
+
+One codebase, two builds (see `docs/adr/0001-capacitor-dual-build.md`):
+
+| Build | Command | Output | Behavior |
+| --- | --- | --- | --- |
+| Web (default) | `npm run build:web` (or `npm run build`) | `.next/` | SSR with proxy/middleware auth and live `/api/*` routes |
+| Mobile | `npm run build:mobile` | `out/` | Self-contained static export (unoptimized images, no API routes) for the Capacitor shell |
+
+From a clean checkout:
+
+```bash
+npm ci
+npm run build:web    # web build -> .next/
+npm run build:mobile # mobile build -> out/
+npm run verify:build-matrix # assert artifact shape of both builds
+```
+
+Notes:
+
+- Build scripts assume a POSIX shell (`sh`/`zsh`); on Windows use WSL or Git Bash.
+- `build:mobile` sets `MOBILE_BUILD=1`, which switches `next.config.ts` to
+  `output: "export"` with unoptimized images and excludes `src/app/api`
+  route handlers (the mobile bundle calls the hosted prod origin instead).
+- The mobile bundle prerenders the public landing shell for server-authenticated
+  surfaces (`/` and the navbar); the client-side auth guard arrives in a
+  follow-up ticket and the web SSR path is unchanged.
+
+---
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

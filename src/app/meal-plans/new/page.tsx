@@ -12,6 +12,7 @@ import styles from "./page.module.css";
 type Recipe = {
   id: string;
   name: string;
+  time?: string;
 };
 
 export default function NewMealPlanPage() {
