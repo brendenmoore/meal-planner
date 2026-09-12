@@ -21,7 +21,7 @@ export default function MobileAuthGuard({
   const pathname = usePathname();
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
-  const [checked, setChecked] = useState(!isMobileBuild());
+  const [sessionChecked, setSessionChecked] = useState(!isMobileBuild());
 
   useEffect(() => {
     if (!isMobileBuild()) {
@@ -29,7 +29,7 @@ export default function MobileAuthGuard({
     }
     let mounted = true;
 
-    const check = async (hasSession: boolean) => {
+    const checkSession = async (hasSession: boolean) => {
       if (!mounted) return;
       const decision = resolveAuthGuard({
         isMobile: true,
@@ -40,16 +40,16 @@ export default function MobileAuthGuard({
         router.replace(decision.redirectTo);
         return;
       }
-      setChecked(true);
+      setSessionChecked(true);
     };
 
     supabase.auth.getSession().then(({ data }) => {
-      void check(Boolean(data.session));
+      void checkSession(Boolean(data.session));
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        void check(Boolean(session));
+        void checkSession(Boolean(session));
       },
     );
 
@@ -69,7 +69,7 @@ export default function MobileAuthGuard({
     return <>{children}</>;
   }
 
-  if (!checked) {
+  if (!sessionChecked) {
     return null;
   }
 

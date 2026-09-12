@@ -83,7 +83,14 @@ export async function apiFetchWithAuth(
   opts?: { accessToken?: string | null; supabaseClient?: SessionClient },
 ): Promise<Response> {
   if (!isMobileBuild()) {
-    return apiFetch(path, init);
+    // Web keeps the cookie session; forwarding an explicit token is
+    // behavior-neutral (apiFetch only attaches headers against a base URL,
+    // which is empty on web) but keeps the override contract uniform.
+    return apiFetch(
+      path,
+      init,
+      opts?.accessToken ? { accessToken: opts.accessToken } : undefined,
+    );
   }
   const token =
     opts?.accessToken !== undefined
