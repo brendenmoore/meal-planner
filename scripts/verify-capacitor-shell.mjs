@@ -82,6 +82,12 @@ check(
   infoPlist.includes("CFBundleURLSchemes") && infoPlist.includes("<string>mealplanner</string>"),
 );
 
+const stringsXml = read(join(root, "android", "app", "src", "main", "res", "values", "strings.xml"));
+check(
+  "shell: android strings.xml scheme matches mealplanner",
+  stringsXml.includes('<string name="custom_url_scheme">mealplanner</string>'),
+);
+
 // No template placeholder identity leaks into the android sources.
 let staleRefs = [];
 try {

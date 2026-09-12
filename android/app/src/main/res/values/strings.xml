@@ -3,5 +3,5 @@
     <string name="app_name">Meal Planner</string>
     <string name="title_activity_main">Meal Planner</string>
     <string name="package_name">dev.bmoore.meals</string>
-    <string name="custom_url_scheme">dev.bmoore.meals</string>
+    <string name="custom_url_scheme">mealplanner</string>
 </resources>

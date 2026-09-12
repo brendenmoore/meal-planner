@@ -55,7 +55,7 @@ Notes:
   handling via `@capacitor/app` lands with the reset flow.
 - **Shell UX**: splash screen, non-overlay status bar (safe-area inset), and
   body-resizing keyboard so inputs stay visible.
-- **Session storage**: `@capacitor/preferences` holds the Supabase session on
+- **Token storage**: `@capacitor/preferences` holds the Supabase session on
   device for v1 (encrypted-storage hardening deferred to pre-public).
 
 From a clean checkout:
@@ -77,6 +77,7 @@ Notes:
 - Synced web assets (`ios/App/App/public/`, `android/app/src/main/assets/`)
   are derived from `out/` and gitignored; the shell projects themselves are
   checked in. Re-run `npm run cap:sync` after every mobile build.
+  `npm run cap:copy` re-copies without rebuilding (faster when `out/` is fresh).
 - Branded icons/splash from the owner-supplied source image land in the
   follow-up ticket (#6).
 
