@@ -41,6 +41,46 @@ Notes:
   logged-out deep routes redirect to login with `?redirect=` preserved — and
   the web SSR path is unchanged.
 
+## Native shell (Capacitor)
+
+`capacitor.config.ts` + checked-in `ios/` and `android/` projects (see
+`docs/adr/0001-capacitor-dual-build.md`):
+
+- **Identity**: app id `dev.bmoore.meals` (reverse-DNS, final once set —
+  changing it later equals a new app listing), display name "Meal Planner"
+  (placeholder, cheap to change). The id is propagated to both shells
+  (Xcode `PRODUCT_BUNDLE_IDENTIFIER`, Gradle `applicationId`).
+- **Deep link**: custom scheme `mealplanner://` reserved in both shells
+  (Android intent-filter + iOS `CFBundleURLTypes`) for auth callbacks; runtime
+  handling via `@capacitor/app` lands with the reset flow.
+- **Shell UX**: splash screen, non-overlay status bar (safe-area inset), and
+  body-resizing keyboard so inputs stay visible.
+- **Token storage**: `@capacitor/preferences` holds the Supabase session on
+  device for v1 (encrypted-storage hardening deferred to pre-public).
+
+From a clean checkout:
+
+```bash
+npm ci
+npm run cap:sync   # build:mobile -> out/, then copy + update both shells
+npm run verify:shell # assert config + scheme + projects + sync pipeline
+npx cap open ios     # or: npm run cap:open:ios
+npx cap open android # or: npm run cap:open:android
+```
+
+Notes:
+
+- Release builds always bundle local files — the base config has no
+  `server.url`. Dev-only live reload is CLI-transient and never persisted:
+  `npx cap run ios --livereload --external` (or `android`) with `npm run dev`
+  running.
+- Synced web assets (`ios/App/App/public/`, `android/app/src/main/assets/`)
+  are derived from `out/` and gitignored; the shell projects themselves are
+  checked in. Re-run `npm run cap:sync` after every mobile build.
+  `npm run cap:copy` re-copies without rebuilding (faster when `out/` is fresh).
+- Branded icons/splash from the owner-supplied source image land in the
+  follow-up ticket (#6).
+
 ---
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).

@@ -17,6 +17,15 @@
 /.next/
 /out/
 
+# capacitor (issue #5): native shells (ios/, android/) are checked in, but the
+# synced web assets are derived from out/ via `npm run cap:sync` — ignore them.
+ios/App/App/public/
+ios/App/App/capacitor.config.json
+ios/App/Pods/
+android/app/src/main/assets/
+# Android Studio local SDK path (machine-specific, per the file's own header).
+android/local.properties
+
 # production
 /build
 
